@@ -8,5 +8,5 @@ class Node:
         self.column = None
         self.pivot = None
 
-    def test_left(self, val):
-        return val <= self.pivot
+    def is_leaf(self):
+        return self.left is None and self.right is None

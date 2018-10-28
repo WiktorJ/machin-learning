@@ -1,0 +1,358 @@
+  
+    \hypertarget{programming-assignment-1-k-nearest-neighbors-classification}{%
+\subsection{Programming assignment 1: k-Nearest Neighbors
+classification}\label{programming-assignment-1-k-nearest-neighbors-classification}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}1}]:} \PY{k+kn}{import} \PY{n+nn}{numpy} \PY{k}{as} \PY{n+nn}{np}
+        \PY{k+kn}{from} \PY{n+nn}{sklearn} \PY{k}{import} \PY{n}{datasets}\PY{p}{,} \PY{n}{model\PYZus{}selection}
+        \PY{k+kn}{import} \PY{n+nn}{matplotlib}\PY{n+nn}{.}\PY{n+nn}{pyplot} \PY{k}{as} \PY{n+nn}{plt}
+        \PY{o}{\PYZpc{}}\PY{k}{matplotlib} inline  
+\end{Verbatim}
+
+    \hypertarget{introduction}{%
+\subsubsection{Introduction}\label{introduction}}
+
+For those of you new to Python, there are lots of tutorials online, just
+pick whichever you like best :)
+
+If you never worked with Numpy or Jupyter before, you can check out
+these guides * https://docs.scipy.org/doc/numpy-dev/user/quickstart.html
+* http://jupyter.readthedocs.io/en/latest/
+
+    \hypertarget{your-task}{%
+\subsubsection{Your task}\label{your-task}}
+
+In this notebook code to perform k-NN classification is provided.
+However, some functions are incomplete. Your task is to fill in the
+missing code and run the entire notebook.
+
+In the beginning of every function there is docstring, which specifies
+the format of input and output. Write your code in a way that adheres to
+it. You may only use plain python and \texttt{numpy} functions (i.e.~no
+scikit-learn classifiers).
+
+    \hypertarget{exporting-the-results-to-pdf}{%
+\subsubsection{Exporting the results to
+PDF}\label{exporting-the-results-to-pdf}}
+
+Once you complete the assignments, export the entire notebook as PDF and
+attach it to your homework solutions. The best way of doing that is 1.
+Run all the cells of the notebook. 2. Download the notebook in HTML
+(click File \textgreater{} Download as \textgreater{} .html) 3. Convert
+the HTML to PDF using e.g.~https://www.sejda.com/html-to-pdf or
+\texttt{wkhtmltopdf} for Linux
+(\href{https://www.cyberciti.biz/open-source/html-to-pdf-freeware-linux-osx-windows-software/}{tutorial})
+4. Concatenate your solutions for other tasks with the output of Step 3.
+On a Linux machine you can simply use \texttt{pdfunite}, there are
+similar tools for other platforms too. You can only upload a single PDF
+file to Moodle.
+
+This way is preferred to using \texttt{nbconvert}, since
+\texttt{nbconvert} clips lines that exceed page width and makes your
+code harder to grade.
+
+    \hypertarget{load-dataset}{%
+\subsubsection{Load dataset}\label{load-dataset}}
+
+The iris data set
+(https://en.wikipedia.org/wiki/Iris\_flower\_data\_set) is loaded and
+split into train and test parts by the function \texttt{load\_dataset}.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}2}]:} \PY{k}{def} \PY{n+nf}{load\PYZus{}dataset}\PY{p}{(}\PY{n}{split}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Load and split the dataset into training and test parts.}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    Parameters}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    split : float in range (0, 1)}
+        \PY{l+s+sd}{        Fraction of the data used for training.}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    Returns}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    X\PYZus{}train : array, shape (N\PYZus{}train, 4)}
+        \PY{l+s+sd}{        Training features.}
+        \PY{l+s+sd}{    y\PYZus{}train : array, shape (N\PYZus{}train)}
+        \PY{l+s+sd}{        Training labels.}
+        \PY{l+s+sd}{    X\PYZus{}test : array, shape (N\PYZus{}test, 4)}
+        \PY{l+s+sd}{        Test features.}
+        \PY{l+s+sd}{    y\PYZus{}test : array, shape (N\PYZus{}test)}
+        \PY{l+s+sd}{        Test labels.}
+        \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+            \PY{n}{dataset} \PY{o}{=} \PY{n}{datasets}\PY{o}{.}\PY{n}{load\PYZus{}iris}\PY{p}{(}\PY{p}{)}
+            \PY{n}{X}\PY{p}{,} \PY{n}{y} \PY{o}{=} \PY{n}{dataset}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{data}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,} \PY{n}{dataset}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{target}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}
+            \PY{n}{X\PYZus{}train}\PY{p}{,} \PY{n}{X\PYZus{}test}\PY{p}{,} \PY{n}{y\PYZus{}train}\PY{p}{,} \PY{n}{y\PYZus{}test} \PY{o}{=}\PYZbs{}
+                \PY{n}{model\PYZus{}selection}\PYZbs{}
+                    \PY{o}{.}\PY{n}{train\PYZus{}test\PYZus{}split}\PY{p}{(}\PY{n}{X}\PY{p}{,} \PY{n}{y}\PY{p}{,} \PY{n}{random\PYZus{}state}\PY{o}{=}\PY{l+m+mi}{123}\PY{p}{,} \PY{n}{test\PYZus{}size}\PY{o}{=}\PY{p}{(}\PY{l+m+mi}{1} \PY{o}{\PYZhy{}} \PY{n}{split}\PY{p}{)}\PY{p}{)}
+            \PY{k}{return} \PY{n}{X\PYZus{}train}\PY{p}{,} \PY{n}{X\PYZus{}test}\PY{p}{,} \PY{n}{y\PYZus{}train}\PY{p}{,} \PY{n}{y\PYZus{}test}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}3}]:} \PY{k}{def} \PY{n+nf}{load\PYZus{}csv\PYZus{}dataset}\PY{p}{(}\PY{n}{split}\PY{p}{,} \PY{n}{path}\PY{p}{)}\PY{p}{:}
+            \PY{n}{dataset} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{loadtxt}\PY{p}{(}\PY{n}{path}\PY{p}{,} \PY{n}{delimiter}\PY{o}{=}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{,}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{n}{skiprows}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{)}
+            \PY{n}{X}\PY{p}{,} \PY{n}{y} \PY{o}{=} \PY{n}{dataset}\PY{p}{[}\PY{p}{:}\PY{p}{,}\PY{p}{:}\PY{l+m+mi}{3}\PY{p}{]}\PY{p}{,} \PY{n}{dataset}\PY{p}{[}\PY{p}{:}\PY{p}{,}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{]}
+            \PY{n}{X\PYZus{}train}\PY{p}{,} \PY{n}{X\PYZus{}test}\PY{p}{,} \PY{n}{y\PYZus{}train}\PY{p}{,} \PY{n}{y\PYZus{}test} \PY{o}{=} \PYZbs{}
+                \PY{n}{model\PYZus{}selection}\PYZbs{}
+                        \PY{o}{.}\PY{n}{train\PYZus{}test\PYZus{}split}\PY{p}{(}\PY{n}{X}\PY{p}{,} \PY{n}{y}\PY{p}{,} \PY{n}{random\PYZus{}state}\PY{o}{=}\PY{l+m+mi}{123}\PY{p}{,} \PY{n}{test\PYZus{}size}\PY{o}{=}\PY{p}{(}\PY{l+m+mi}{1} \PY{o}{\PYZhy{}} \PY{n}{split}\PY{p}{)}\PY{p}{)}
+            \PY{k}{return} \PY{n}{X\PYZus{}train}\PY{p}{,} \PY{n}{X\PYZus{}test}\PY{p}{,} \PY{n}{y\PYZus{}train}\PY{p}{,} \PY{n}{y\PYZus{}test}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}4}]:} \PY{c+c1}{\PYZsh{} prepare data}
+        \PY{n}{split} \PY{o}{=} \PY{l+m+mf}{0.75}
+        \PY{n}{X\PYZus{}train}\PY{p}{,} \PY{n}{X\PYZus{}test}\PY{p}{,} \PY{n}{y\PYZus{}train}\PY{p}{,} \PY{n}{y\PYZus{}test} \PY{o}{=} \PY{n}{load\PYZus{}dataset}\PY{p}{(}\PY{n}{split}\PY{p}{)}
+\end{Verbatim}
+
+    \hypertarget{plot-dataset}{%
+\subsubsection{Plot dataset}\label{plot-dataset}}
+
+Since the data has 4 features, 16 scatterplots (4x4) are plotted showing
+the dependencies between each pair of features.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}5}]:} \PY{n}{f}\PY{p}{,} \PY{n}{axes} \PY{o}{=} \PY{n}{plt}\PY{o}{.}\PY{n}{subplots}\PY{p}{(}\PY{l+m+mi}{4}\PY{p}{,} \PY{l+m+mi}{4}\PY{p}{,}\PY{n}{figsize}\PY{o}{=}\PY{p}{(}\PY{l+m+mi}{15}\PY{p}{,} \PY{l+m+mi}{15}\PY{p}{)}\PY{p}{)}
+        \PY{k}{for} \PY{n}{i} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{l+m+mi}{4}\PY{p}{)}\PY{p}{:}
+            \PY{k}{for} \PY{n}{j} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{l+m+mi}{4}\PY{p}{)}\PY{p}{:}
+                \PY{k}{if} \PY{n}{j} \PY{o}{==} \PY{l+m+mi}{0} \PY{o+ow}{and} \PY{n}{i} \PY{o}{==} \PY{l+m+mi}{0}\PY{p}{:}
+                    \PY{n}{axes}\PY{p}{[}\PY{n}{i}\PY{p}{,}\PY{n}{j}\PY{p}{]}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{l+m+mf}{0.5}\PY{p}{,} \PY{l+m+mf}{0.5}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Sepal. length}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{ha}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{center}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{va}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{center}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{size}\PY{o}{=}\PY{l+m+mi}{24}\PY{p}{,} \PY{n}{alpha}\PY{o}{=}\PY{o}{.}\PY{l+m+mi}{5}\PY{p}{)}
+                \PY{k}{elif} \PY{n}{j} \PY{o}{==} \PY{l+m+mi}{1} \PY{o+ow}{and} \PY{n}{i} \PY{o}{==} \PY{l+m+mi}{1}\PY{p}{:}
+                    \PY{n}{axes}\PY{p}{[}\PY{n}{i}\PY{p}{,}\PY{n}{j}\PY{p}{]}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{l+m+mf}{0.5}\PY{p}{,} \PY{l+m+mf}{0.5}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Sepal. width}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{ha}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{center}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{va}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{center}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{size}\PY{o}{=}\PY{l+m+mi}{24}\PY{p}{,} \PY{n}{alpha}\PY{o}{=}\PY{o}{.}\PY{l+m+mi}{5}\PY{p}{)}
+                \PY{k}{elif} \PY{n}{j} \PY{o}{==} \PY{l+m+mi}{2} \PY{o+ow}{and} \PY{n}{i} \PY{o}{==} \PY{l+m+mi}{2}\PY{p}{:}
+                    \PY{n}{axes}\PY{p}{[}\PY{n}{i}\PY{p}{,}\PY{n}{j}\PY{p}{]}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{l+m+mf}{0.5}\PY{p}{,} \PY{l+m+mf}{0.5}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Petal. length}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{ha}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{center}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{va}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{center}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{size}\PY{o}{=}\PY{l+m+mi}{24}\PY{p}{,} \PY{n}{alpha}\PY{o}{=}\PY{o}{.}\PY{l+m+mi}{5}\PY{p}{)}
+                \PY{k}{elif} \PY{n}{j} \PY{o}{==} \PY{l+m+mi}{3} \PY{o+ow}{and} \PY{n}{i} \PY{o}{==} \PY{l+m+mi}{3}\PY{p}{:}
+                    \PY{n}{axes}\PY{p}{[}\PY{n}{i}\PY{p}{,}\PY{n}{j}\PY{p}{]}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{l+m+mf}{0.5}\PY{p}{,} \PY{l+m+mf}{0.5}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Petal. width}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{ha}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{center}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{va}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{center}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{size}\PY{o}{=}\PY{l+m+mi}{24}\PY{p}{,} \PY{n}{alpha}\PY{o}{=}\PY{o}{.}\PY{l+m+mi}{5}\PY{p}{)}
+                \PY{k}{else}\PY{p}{:}
+                    \PY{n}{axes}\PY{p}{[}\PY{n}{i}\PY{p}{,}\PY{n}{j}\PY{p}{]}\PY{o}{.}\PY{n}{scatter}\PY{p}{(}\PY{n}{X\PYZus{}train}\PY{p}{[}\PY{p}{:}\PY{p}{,}\PY{n}{j}\PY{p}{]}\PY{p}{,}\PY{n}{X\PYZus{}train}\PY{p}{[}\PY{p}{:}\PY{p}{,}\PY{n}{i}\PY{p}{]}\PY{p}{,} \PY{n}{c}\PY{o}{=}\PY{n}{y\PYZus{}train}\PY{p}{,} \PY{n}{cmap}\PY{o}{=}\PY{n}{plt}\PY{o}{.}\PY{n}{cm}\PY{o}{.}\PY{n}{cool}\PY{p}{)}
+\end{Verbatim}
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{output_10_0.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    \hypertarget{task-1-euclidean-distance}{%
+\subsubsection{Task 1: Euclidean
+distance}\label{task-1-euclidean-distance}}
+
+Compute Euclidean distance between two data points.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}6}]:} \PY{k}{def} \PY{n+nf}{euclidean\PYZus{}distance}\PY{p}{(}\PY{n}{x1}\PY{p}{,} \PY{n}{x2}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Compute Euclidean distance between two data points.}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    Parameters}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    x1 : array, shape (4)}
+        \PY{l+s+sd}{        First data point.}
+        \PY{l+s+sd}{    x2 : array, shape (4)}
+        \PY{l+s+sd}{        Second data point.}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    Returns}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    distance : float}
+        \PY{l+s+sd}{        Euclidean distance between x1 and x2.}
+        \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+            \PY{k+kn}{from} \PY{n+nn}{functools} \PY{k}{import} \PY{n}{reduce}
+            \PY{k}{return} \PY{n}{reduce}\PY{p}{(}\PY{k}{lambda} \PY{n}{acc}\PY{p}{,} \PY{n}{cords}\PY{p}{:} \PY{n}{acc} \PY{o}{+} \PY{p}{(}\PY{n}{cords}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]} \PY{o}{\PYZhy{}} \PY{n}{cords}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{)} \PY{o}{*}\PY{o}{*} \PY{l+m+mi}{2}\PY{p}{,}
+                          \PY{n+nb}{zip}\PY{p}{(}\PY{n}{x1}\PY{p}{,} \PY{n}{x2}\PY{p}{)}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{)} \PY{o}{*}\PY{o}{*} \PY{p}{(}\PY{l+m+mi}{1} \PY{o}{/} \PY{l+m+mi}{2}\PY{p}{)}
+\end{Verbatim}
+
+    \hypertarget{task-2-get-k-nearest-neighbors-labels}{%
+\subsubsection{Task 2: get k nearest neighbors'
+labels}\label{task-2-get-k-nearest-neighbors-labels}}
+
+Get the labels of the \emph{k} nearest neighbors of the datapoint
+\emph{x\_new}.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}7}]:} \PY{k}{def} \PY{n+nf}{get\PYZus{}neighbors\PYZus{}labels}\PY{p}{(}\PY{n}{X\PYZus{}train}\PY{p}{,} \PY{n}{y\PYZus{}train}\PY{p}{,} \PY{n}{x\PYZus{}new}\PY{p}{,} \PY{n}{k}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Get the labels of the k nearest neighbors of the datapoint x\PYZus{}new.}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    Parameters}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    X\PYZus{}train : array, shape (N\PYZus{}train, 4)}
+        \PY{l+s+sd}{        Training features.}
+        \PY{l+s+sd}{    y\PYZus{}train : array, shape (N\PYZus{}train)}
+        \PY{l+s+sd}{        Training labels.}
+        \PY{l+s+sd}{    x\PYZus{}new : array, shape (4)}
+        \PY{l+s+sd}{        Data point for which the neighbors have to be found.}
+        \PY{l+s+sd}{    k : int}
+        \PY{l+s+sd}{        Number of neighbors to return.}
+        \PY{l+s+sd}{        }
+        \PY{l+s+sd}{    Returns}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    neighbors\PYZus{}labels : array, shape (k)}
+        \PY{l+s+sd}{        Array containing the labels of the k nearest neighbors.}
+        \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+            \PY{n}{distances} \PY{o}{=} \PYZbs{}
+                \PY{n+nb}{list}\PY{p}{(}
+                    \PY{n+nb}{map}\PY{p}{(}\PY{k}{lambda} \PY{n}{el}\PY{p}{:} \PY{p}{(}\PY{n}{euclidean\PYZus{}distance}\PY{p}{(}\PY{n}{el}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{x\PYZus{}new}\PY{p}{)}\PY{p}{,} \PY{n}{el}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{)}\PY{p}{,} 
+                        \PY{n+nb}{zip}\PY{p}{(}\PY{n}{X\PYZus{}train}\PY{p}{,} \PY{n}{y\PYZus{}train}\PY{p}{)}\PY{p}{)}
+                \PY{p}{)}
+            \PY{n}{distances}\PY{o}{.}\PY{n}{sort}\PY{p}{(}\PY{n}{key}\PY{o}{=}\PY{k}{lambda} \PY{n}{element}\PY{p}{:} \PY{n}{element}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{)}
+            \PY{k}{return} \PY{n+nb}{list}\PY{p}{(}\PY{n+nb}{map}\PY{p}{(}\PY{k}{lambda} \PY{n}{element}\PY{p}{:} \PY{n}{element}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{n}{distances}\PY{p}{[}\PY{p}{:}\PY{n}{k}\PY{p}{]}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+
+    \hypertarget{task-3-get-the-majority-label}{%
+\subsubsection{Task 3: get the majority
+label}\label{task-3-get-the-majority-label}}
+
+For the previously computed labels of the \emph{k} nearest neighbors,
+compute the actual response. I.e. give back the class of the majority of
+nearest neighbors. In case of a tie, choose the ``lowest'' label
+(i.e.~the order of tie resolutions is 0 \textgreater{} 1 \textgreater{}
+2).
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}8}]:} \PY{k}{def} \PY{n+nf}{get\PYZus{}response}\PY{p}{(}\PY{n}{neighbors\PYZus{}labels}\PY{p}{,} \PY{n}{num\PYZus{}classes}\PY{o}{=}\PY{l+m+mi}{3}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Predict label given the set of neighbors.}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    Parameters}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    neighbors\PYZus{}labels : array, shape (k)}
+        \PY{l+s+sd}{        Array containing the labels of the k nearest neighbors.}
+        \PY{l+s+sd}{    num\PYZus{}classes : int}
+        \PY{l+s+sd}{        Number of classes in the dataset.}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    Returns}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    y : int}
+        \PY{l+s+sd}{        Majority class among the neighbors.}
+        \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+            \PY{k}{return} \PY{n}{np}\PY{o}{.}\PY{n}{argmax}\PY{p}{(}\PY{p}{[}\PY{n}{neighbors\PYZus{}labels}\PY{o}{.}\PY{n}{count}\PY{p}{(}\PY{n}{y}\PY{p}{)} \PY{k}{for} \PY{n}{y} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{n}{num\PYZus{}classes}\PY{p}{)}\PY{p}{]}\PY{p}{)}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}9}]:} \PY{k}{def} \PY{n+nf}{get\PYZus{}response\PYZus{}real}\PY{p}{(}\PY{n}{neighbors\PYZus{}values}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Predict label given the set of neighbors.}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    Parameters}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    neighbors\PYZus{}values : array, shape (k)}
+        \PY{l+s+sd}{        Array containing the labels of the k nearest neighbors.}
+        \PY{l+s+sd}{    num\PYZus{}classes : int}
+        \PY{l+s+sd}{        Number of classes in the dataset.}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    Returns}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    y : int}
+        \PY{l+s+sd}{        Majority class among the neighbors.}
+        \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+            \PY{k}{return} \PY{n+nb}{sum}\PY{p}{(}\PY{n}{neighbors\PYZus{}values}\PY{p}{)}\PY{o}{/}\PY{n+nb}{float}\PY{p}{(}\PY{n+nb}{len}\PY{p}{(}\PY{n}{neighbors\PYZus{}values}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+
+    \hypertarget{task-4-compute-accuracy}{%
+\subsubsection{Task 4: compute accuracy}\label{task-4-compute-accuracy}}
+
+Compute the accuracy of the generated predictions.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}10}]:} \PY{k}{def} \PY{n+nf}{compute\PYZus{}accuracy}\PY{p}{(}\PY{n}{y\PYZus{}pred}\PY{p}{,} \PY{n}{y\PYZus{}test}\PY{p}{)}\PY{p}{:}
+             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Compute accuracy of prediction.}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    Parameters}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    y\PYZus{}pred : array, shape (N\PYZus{}test)}
+         \PY{l+s+sd}{        Predicted labels.}
+         \PY{l+s+sd}{    y\PYZus{}test : array, shape (N\PYZus{}test)}
+         \PY{l+s+sd}{        True labels.}
+         \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+             \PY{n}{values}\PY{p}{,} \PY{n}{counts} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{unique}\PY{p}{(}\PY{n}{y\PYZus{}pred} \PY{o}{==} \PY{n}{y\PYZus{}test}\PY{p}{,} \PY{n}{return\PYZus{}counts}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+             \PY{k}{return} \PY{n+nb}{dict}\PY{p}{(}\PY{n+nb}{zip}\PY{p}{(}\PY{n}{values}\PY{p}{,} \PY{n}{counts}\PY{p}{)}\PY{p}{)}\PY{p}{[}\PY{k+kc}{True}\PY{p}{]} \PY{o}{/} \PY{n+nb}{len}\PY{p}{(}\PY{n}{y\PYZus{}pred}\PY{p}{)}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}11}]:} \PY{c+c1}{\PYZsh{} This function is given, nothing to do here.}
+         \PY{k}{def} \PY{n+nf}{predict}\PY{p}{(}\PY{n}{X\PYZus{}train}\PY{p}{,} \PY{n}{y\PYZus{}train}\PY{p}{,} \PY{n}{X\PYZus{}test}\PY{p}{,} \PY{n}{k}\PY{p}{,} \PY{n}{real}\PY{o}{=}\PY{k+kc}{False}\PY{p}{)}\PY{p}{:}
+             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Generate predictions for all points in the test set.}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    Parameters}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    X\PYZus{}train : array, shape (N\PYZus{}train, 4)}
+         \PY{l+s+sd}{        Training features.        }
+         \PY{l+s+sd}{    y\PYZus{}train : array, shape (N\PYZus{}train)}
+         \PY{l+s+sd}{        Training labels.}
+         \PY{l+s+sd}{    X\PYZus{}test : array, shape (N\PYZus{}test, 4)}
+         \PY{l+s+sd}{        Test features.}
+         \PY{l+s+sd}{    k : int}
+         \PY{l+s+sd}{        Number of neighbors to consider.}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    Returns}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    y\PYZus{}pred : array, shape (N\PYZus{}test)}
+         \PY{l+s+sd}{        Predictions for the test data.}
+         \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+             \PY{n}{y\PYZus{}pred} \PY{o}{=} \PY{p}{[}\PY{p}{]}
+             \PY{k}{for} \PY{n}{x\PYZus{}new} \PY{o+ow}{in} \PY{n}{X\PYZus{}test}\PY{p}{:}
+                 \PY{n}{neighbors} \PY{o}{=} \PY{n}{get\PYZus{}neighbors\PYZus{}labels}\PY{p}{(}\PY{n}{X\PYZus{}train}\PY{p}{,} \PY{n}{y\PYZus{}train}\PY{p}{,} \PY{n}{x\PYZus{}new}\PY{p}{,} \PY{n}{k}\PY{p}{)}
+                 \PY{n}{y\PYZus{}pred}\PY{o}{.}\PY{n}{append}\PY{p}{(}\PY{n}{get\PYZus{}response}\PY{p}{(}\PY{n}{neighbors}\PY{p}{,} \PY{n}{k}\PY{p}{)} \PY{k}{if} \PY{o+ow}{not} \PY{n}{real}
+                               \PY{k}{else} \PY{n}{get\PYZus{}response\PYZus{}real}\PY{p}{(}\PY{n}{neighbors}\PY{p}{)}\PY{p}{)}
+             \PY{k}{return} \PY{n}{y\PYZus{}pred}
+\end{Verbatim}
+
+    \hypertarget{testing}{%
+\subsubsection{Testing}\label{testing}}
+
+Should output an accuracy of 0.9473684210526315.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}12}]:} \PY{c+c1}{\PYZsh{} prepare data}
+         \PY{n}{split} \PY{o}{=} \PY{l+m+mf}{0.75}
+         \PY{n}{X\PYZus{}train}\PY{p}{,} \PY{n}{X\PYZus{}test}\PY{p}{,} \PY{n}{y\PYZus{}train}\PY{p}{,} \PY{n}{y\PYZus{}test} \PY{o}{=} \PY{n}{load\PYZus{}dataset}\PY{p}{(}\PY{n}{split}\PY{p}{)}
+         \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Training set: }\PY{l+s+si}{\PYZob{}0\PYZcb{}}\PY{l+s+s1}{ samples}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{X\PYZus{}train}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{)}\PY{p}{)}
+         \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Test set: }\PY{l+s+si}{\PYZob{}0\PYZcb{}}\PY{l+s+s1}{ samples}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{X\PYZus{}test}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{)}\PY{p}{)}
+         
+         \PY{c+c1}{\PYZsh{} generate predictions}
+         \PY{n}{k} \PY{o}{=} \PY{l+m+mi}{3}
+         \PY{n}{y\PYZus{}pred} \PY{o}{=} \PY{n}{predict}\PY{p}{(}\PY{n}{X\PYZus{}train}\PY{p}{,} \PY{n}{y\PYZus{}train}\PY{p}{,} \PY{n}{X\PYZus{}test}\PY{p}{,} \PY{n}{k}\PY{p}{)}
+         \PY{n}{accuracy} \PY{o}{=} \PY{n}{compute\PYZus{}accuracy}\PY{p}{(}\PY{n}{y\PYZus{}pred}\PY{p}{,} \PY{n}{y\PYZus{}test}\PY{p}{)}
+         \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Accuracy = }\PY{l+s+si}{\PYZob{}0\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{accuracy}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+Training set: 112 samples
+Test set: 38 samples
+Accuracy = 0.9473684210526315
+
+    \end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}13}]:} \PY{n}{split} \PY{o}{=} \PY{l+m+mi}{1}
+         \PY{n}{X\PYZus{}train}\PY{p}{,} \PY{n}{\PYZus{}}\PY{p}{,} \PY{n}{y\PYZus{}train}\PY{p}{,} \PY{n}{\PYZus{}} \PY{o}{=} \PY{n}{load\PYZus{}csv\PYZus{}dataset}\PY{p}{(}\PY{n}{split}\PY{p}{,} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{data/01\PYZus{}homework\PYZus{}dataset.csv}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+         \PY{n}{k} \PY{o}{=} \PY{l+m+mi}{3}
+         \PY{n}{x\PYZus{}a} \PY{o}{=} \PY{p}{[}\PY{l+m+mf}{4.1}\PY{p}{,} \PY{o}{\PYZhy{}}\PY{l+m+mf}{0.1}\PY{p}{,} \PY{l+m+mf}{2.2}\PY{p}{]}
+         \PY{n}{x\PYZus{}b} \PY{o}{=} \PY{p}{[}\PY{l+m+mf}{6.1}\PY{p}{,} \PY{l+m+mf}{0.4}\PY{p}{,} \PY{l+m+mf}{1.3}\PY{p}{]}
+         \PY{n}{X\PYZus{}test} \PY{o}{=} \PY{p}{[}\PY{n}{x\PYZus{}a}\PY{p}{,} \PY{n}{x\PYZus{}b}\PY{p}{]}
+         \PY{n}{y\PYZus{}pred} \PY{o}{=} \PY{n}{predict}\PY{p}{(}\PY{n}{X\PYZus{}train}\PY{p}{,} \PY{n}{y\PYZus{}train}\PY{p}{,} \PY{n}{X\PYZus{}test}\PY{p}{,} \PY{n}{k}\PY{p}{)}
+         \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{x\PYZus{}a class = }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{\PYZdq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{y\PYZus{}pred}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{)}\PY{p}{)}
+         \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{x\PYZus{}b class = }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{\PYZdq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{y\PYZus{}pred}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+x\_a class = 0
+x\_b class = 2
+
+    \end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}14}]:} \PY{n}{split} \PY{o}{=} \PY{l+m+mi}{1}
+         \PY{n}{X\PYZus{}train}\PY{p}{,} \PY{n}{\PYZus{}}\PY{p}{,} \PY{n}{y\PYZus{}train}\PY{p}{,} \PY{n}{\PYZus{}} \PY{o}{=} \PY{n}{load\PYZus{}csv\PYZus{}dataset}\PY{p}{(}\PY{n}{split}\PY{p}{,} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{data/01\PYZus{}homework\PYZus{}dataset.csv}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+         \PY{n}{k} \PY{o}{=} \PY{l+m+mi}{3}
+         \PY{n}{x\PYZus{}a} \PY{o}{=} \PY{p}{[}\PY{l+m+mf}{4.1}\PY{p}{,} \PY{o}{\PYZhy{}}\PY{l+m+mf}{0.1}\PY{p}{,} \PY{l+m+mf}{2.2}\PY{p}{]}
+         \PY{n}{x\PYZus{}b} \PY{o}{=} \PY{p}{[}\PY{l+m+mf}{6.1}\PY{p}{,} \PY{l+m+mf}{0.4}\PY{p}{,} \PY{l+m+mf}{1.3}\PY{p}{]}
+         \PY{n}{X\PYZus{}test} \PY{o}{=} \PY{p}{[}\PY{n}{x\PYZus{}a}\PY{p}{,} \PY{n}{x\PYZus{}b}\PY{p}{]}
+         \PY{n}{y\PYZus{}pred} \PY{o}{=} \PY{n}{predict}\PY{p}{(}\PY{n}{X\PYZus{}train}\PY{p}{,} \PY{n}{y\PYZus{}train}\PY{p}{,} \PY{n}{X\PYZus{}test}\PY{p}{,} \PY{n}{k}\PY{p}{,} \PY{n}{real}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+         \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{x\PYZus{}a solution = }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{\PYZdq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{y\PYZus{}pred}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{)}\PY{p}{)}
+         \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{x\PYZus{}b solution = }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{\PYZdq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{y\PYZus{}pred}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+x\_a solution = 1.0
+x\_b solution = 1.3333333333333333
+
+    \end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor} }]:} 
+\end{Verbatim}
+

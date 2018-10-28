@@ -4,21 +4,40 @@ from node import Node
 
 
 def get_thresholds(data):
+    """
+    :param data: 2d numeric array
+    :return: A 2d array with with columns containing unique values from corresponding columns from `data`
+    """
     return [sorted(set(data[:, c])) for c in range(0, data.shape[1])]
 
 
 def get_predictions(data, labels):
+    """
+    Calculates the "Likelihood" for each label to occur
+    :param data: data for which predictions are calculated
+    :param labels: set of labels
+    :return: dict {label_id: "Likelihood"}
+    """
     return {int(l): list(data[:, -1]).count(l) / len(data[:, -1]) for l in labels}
 
 
 def get_gini(predictions):
-    gini = 1
-    for _, v in predictions.items():
-        gini -= v ** 2
-    return gini
+    """
+    Calculates gini index based on predictions
+    :param predictions:
+    :return: gini index
+    """
+    from functools import reduce
+    return reduce(lambda acc, val: acc - val ** 2, predictions.values(), 1)
 
 
 def split(data, thresholds):
+    """
+    Tries to split data at every point in `thresholds`. Returns split with the lowest gini index
+    :param data: data to split
+    :param thresholds: possible points to split
+    :return: split data, value and its column on which data was split
+    """
     left_data = None
     right_data = None
     min_cost = 1
@@ -48,6 +67,12 @@ def split(data, thresholds):
 
 
 def fit_tree(data, depth):
+    """
+    Recursively creates decision tree
+    :param data: data at current node
+    :param depth: current depth
+    :return: root of (sub)tree
+    """
     root = Node()
     thresholds = get_thresholds(data)
     root.prediction = get_predictions(data, thresholds[-1])
@@ -60,20 +85,39 @@ def fit_tree(data, depth):
     return root
 
 
-def print_tree(root, intendation):
-    if root is None:
-        return
-    print(intendation + "Distribution: {}, gini index: {}".format(root.prediction, root.misclassification_rate))
-    print_tree(root.left, intendation + "->")
-    print_tree(root.right, intendation + "->")
-    return
+def print_tree(root, indentation):
+    """
+    :param root: Root of the tree
+    :param indentation: Each level in tree adds indentation string for clearer output
+    """
+    if root is not None:
+        prediction = {el: round(root.prediction[el], 3) for el in root.prediction}
+        print_tree(root.right, "    {}->".format(indentation))
+        print("{} \\textcolor{{blue}}{{ Distribution: ({}), gini index: {} }} {}"
+              .format(indentation,
+                      prediction,
+                      round(root.misclassification_rate, 3),
+                      "column: {}, pivot: {}".format(root.column, root.pivot) if not root.is_leaf() else "LEAF"))
+        print_tree(root.left, "    {}->".format(indentation))
 
 
 def get_class(prediction):
-    return max(prediction, key=prediction.get)
+    """
+
+    :param prediction: predictions for each label
+    :return: the most likely label and its prediction
+    """
+    label = max(prediction, key=prediction.get)
+    return label, round(prediction[label],3)
 
 
 def classify(root, vector):
+    """
+    Recursively travers a tree to find label of `vector`
+    :param root: root of (sub)tree
+    :param vector: vector to classify
+    :return: label
+    """
     if root.left is None and root.right is None:
         return get_class(root.prediction)
     pivot = vector[root.column]
@@ -86,8 +130,8 @@ def classify(root, vector):
 data = np.loadtxt("data/01_homework_dataset.csv", delimiter=",", skiprows=1)
 tree_root = fit_tree(data, 0)
 print_tree(tree_root, "")
+
 x_a = [4.1, -0.1, 2.2]
 x_b = [6.1, 0.4, 1.3]
-
 print("x_a class: {}".format(classify(tree_root, x_a)))
 print("x_b class: {}".format(classify(tree_root, x_b)))

@@ -1,0 +1,654 @@
+\documentclass{article} 
+       
+    
+    \usepackage[T1]{fontenc}
+    % Nicer default font (+ math font) than Computer Modern for most use cases
+    \usepackage{mathpazo}
+
+    % Basic figure setup, for now with no caption control since it's done
+    % automatically by Pandoc (which extracts ![](path) syntax from Markdown).
+    \usepackage{graphicx}
+    % We will generate all images so they have a width \maxwidth. This means
+    % that they will get their normal width if they fit onto the page, but
+    % are scaled down if they would overflow the margins.
+    \makeatletter
+    \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth
+    \else\Gin@nat@width\fi}
+    \makeatother
+    \let\Oldincludegraphics\includegraphics
+    % Set max figure width to be 80% of text width, for now hardcoded.
+    \renewcommand{\includegraphics}[1]{\Oldincludegraphics[width=.8\maxwidth]{#1}}
+    % Ensure that by default, figures have no caption (until we provide a
+    % proper Figure object with a Caption API and a way to capture that
+    % in the conversion process - todo).
+    \usepackage{caption}
+    \DeclareCaptionLabelFormat{nolabel}{}
+    \captionsetup{labelformat=nolabel}
+
+    \usepackage{adjustbox} % Used to constrain images to a maximum size 
+    \usepackage{xcolor} % Allow colors to be defined
+    \usepackage{enumerate} % Needed for markdown enumerations to work
+    \usepackage{geometry} % Used to adjust the document margins
+    \usepackage{amsmath} % Equations
+    \usepackage{amssymb} % Equations
+    \usepackage{textcomp} % defines textquotesingle
+    % Hack from http://tex.stackexchange.com/a/47451/13684:
+    \AtBeginDocument{%
+        \def\PYZsq{\textquotesingle}% Upright quotes in Pygmentized code
+    }
+    \usepackage{upquote} % Upright quotes for verbatim code
+    \usepackage{eurosym} % defines \euro
+    \usepackage[mathletters]{ucs} % Extended unicode (utf-8) support
+    \usepackage[utf8x]{inputenc} % Allow utf-8 characters in the tex document
+    \usepackage{fancyvrb} % verbatim replacement that allows latex
+    \usepackage{grffile} % extends the file name processing of package graphics 
+                         % to support a larger range 
+    % The hyperref package gives us a pdf with properly built
+    % internal navigation ('pdf bookmarks' for the table of contents,
+    % internal cross-reference links, web links for URLs, etc.)
+    \usepackage{hyperref}
+    \usepackage{longtable} % longtable support required by pandoc >1.10
+    \usepackage{booktabs}  % table support for pandoc > 1.12.2
+    \usepackage[inline]{enumitem} % IRkernel/repr support (it uses the enumerate* environment)
+    \usepackage[normalem]{ulem} % ulem is needed to support strikethroughs (\sout)
+                                % normalem makes italics be italics, not underlines
+    \usepackage{mathrsfs}
+    
+
+    
+    
+    % Colors for the hyperref package
+    \definecolor{urlcolor}{rgb}{0,.145,.698}
+    \definecolor{linkcolor}{rgb}{.71,0.21,0.01}
+    \definecolor{citecolor}{rgb}{.12,.54,.11}
+
+    % ANSI colors
+    \definecolor{ansi-black}{HTML}{3E424D}
+    \definecolor{ansi-black-intense}{HTML}{282C36}
+    \definecolor{ansi-red}{HTML}{E75C58}
+    \definecolor{ansi-red-intense}{HTML}{B22B31}
+    \definecolor{ansi-green}{HTML}{00A250}
+    \definecolor{ansi-green-intense}{HTML}{007427}
+    \definecolor{ansi-yellow}{HTML}{DDB62B}
+    \definecolor{ansi-yellow-intense}{HTML}{B27D12}
+    \definecolor{ansi-blue}{HTML}{208FFB}
+    \definecolor{ansi-blue-intense}{HTML}{0065CA}
+    \definecolor{ansi-magenta}{HTML}{D160C4}
+    \definecolor{ansi-magenta-intense}{HTML}{A03196}
+    \definecolor{ansi-cyan}{HTML}{60C6C8}
+    \definecolor{ansi-cyan-intense}{HTML}{258F8F}
+    \definecolor{ansi-white}{HTML}{C5C1B4}
+    \definecolor{ansi-white-intense}{HTML}{A1A6B2}
+    \definecolor{ansi-default-inverse-fg}{HTML}{FFFFFF}
+    \definecolor{ansi-default-inverse-bg}{HTML}{000000}
+
+    % commands and environments needed by pandoc snippets
+    % extracted from the output of `pandoc -s`
+    \providecommand{\tightlist}{%
+      \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+    \DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+    % Add ',fontsize=\small' for more characters per line
+    \newenvironment{Shaded}{}{}
+    \newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{{#1}}}}
+    \newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.56,0.13,0.00}{{#1}}}
+    \newcommand{\DecValTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\FloatTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\CharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\StringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\CommentTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textit{{#1}}}}
+    \newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{{#1}}}
+    \newcommand{\AlertTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{{#1}}}}
+    \newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.02,0.16,0.49}{{#1}}}
+    \newcommand{\RegionMarkerTok}[1]{{#1}}
+    \newcommand{\ErrorTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{{#1}}}}
+    \newcommand{\NormalTok}[1]{{#1}}
+    
+    % Additional commands for more recent versions of Pandoc
+    \newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.53,0.00,0.00}{{#1}}}
+    \newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.73,0.40,0.53}{{#1}}}
+    \newcommand{\ImportTok}[1]{{#1}}
+    \newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.73,0.13,0.13}{\textit{{#1}}}}
+    \newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    \newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    \newcommand{\VariableTok}[1]{\textcolor[rgb]{0.10,0.09,0.49}{{#1}}}
+    \newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{{#1}}}}
+    \newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.40,0.40,0.40}{{#1}}}
+    \newcommand{\BuiltInTok}[1]{{#1}}
+    \newcommand{\ExtensionTok}[1]{{#1}}
+    \newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.74,0.48,0.00}{{#1}}}
+    \newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.49,0.56,0.16}{{#1}}}
+    \newcommand{\InformationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    \newcommand{\WarningTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    
+    
+    % Define a nice break command that doesn't care if a line doesn't already
+    % exist.
+    \def\br{\hspace*{\fill} \\* }
+    % Math Jax compatibility definitions
+    \def\gt{>}
+    \def\lt{<}
+    \let\Oldtex\TeX
+    \let\Oldlatex\LaTeX
+    \renewcommand{\TeX}{\textrm{\Oldtex}}
+    \renewcommand{\LaTeX}{\textrm{\Oldlatex}}
+    % Document parameters
+    % Document title
+    \title{01\_homework\_knn}
+    
+    
+    
+    
+    
+
+    % Pygments definitions
+    
+\makeatletter
+\def\PY@reset{\let\PY@it=\relax \let\PY@bf=\relax%
+    \let\PY@ul=\relax \let\PY@tc=\relax%
+    \let\PY@bc=\relax \let\PY@ff=\relax}
+\def\PY@tok#1{\csname PY@tok@#1\endcsname}
+\def\PY@toks#1+{\ifx\relax#1\empty\else%
+    \PY@tok{#1}\expandafter\PY@toks\fi}
+\def\PY@do#1{\PY@bc{\PY@tc{\PY@ul{%
+    \PY@it{\PY@bf{\PY@ff{#1}}}}}}}
+\def\PY#1#2{\PY@reset\PY@toks#1+\relax+\PY@do{#2}}
+
+\expandafter\def\csname PY@tok@w\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.73,0.73}{##1}}}
+\expandafter\def\csname PY@tok@c\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@cp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.74,0.48,0.00}{##1}}}
+\expandafter\def\csname PY@tok@k\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kt\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.69,0.00,0.25}{##1}}}
+\expandafter\def\csname PY@tok@o\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@ow\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.67,0.13,1.00}{##1}}}
+\expandafter\def\csname PY@tok@nb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nf\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@nc\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@nn\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@ne\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.82,0.25,0.23}{##1}}}
+\expandafter\def\csname PY@tok@nv\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@no\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.53,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nl\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.63,0.63,0.00}{##1}}}
+\expandafter\def\csname PY@tok@ni\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.60,0.60,0.60}{##1}}}
+\expandafter\def\csname PY@tok@na\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.49,0.56,0.16}{##1}}}
+\expandafter\def\csname PY@tok@nt\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nd\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.67,0.13,1.00}{##1}}}
+\expandafter\def\csname PY@tok@s\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sd\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@si\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.53}{##1}}}
+\expandafter\def\csname PY@tok@se\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sr\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.53}{##1}}}
+\expandafter\def\csname PY@tok@ss\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@sx\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@m\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@gh\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@gu\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.50,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@gd\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.63,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@gi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.63,0.00}{##1}}}
+\expandafter\def\csname PY@tok@gr\endcsname{\def\PY@tc##1{\textcolor[rgb]{1.00,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@ge\endcsname{\let\PY@it=\textit}
+\expandafter\def\csname PY@tok@gs\endcsname{\let\PY@bf=\textbf}
+\expandafter\def\csname PY@tok@gp\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@go\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.53,0.53,0.53}{##1}}}
+\expandafter\def\csname PY@tok@gt\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.27,0.87}{##1}}}
+\expandafter\def\csname PY@tok@err\endcsname{\def\PY@bc##1{\setlength{\fboxsep}{0pt}\fcolorbox[rgb]{1.00,0.00,0.00}{1,1,1}{\strut ##1}}}
+\expandafter\def\csname PY@tok@kc\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kd\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kn\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kr\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@bp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@fm\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@vc\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@vg\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@vi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@vm\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@sa\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sc\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@dl\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@s2\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sh\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@s1\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@mb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@mf\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@mh\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@mi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@il\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@mo\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@ch\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@cm\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@cpf\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@c1\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@cs\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+
+\def\PYZbs{\char`\\}
+\def\PYZus{\char`\_}
+\def\PYZob{\char`\{}
+\def\PYZcb{\char`\}}
+\def\PYZca{\char`\^}
+\def\PYZam{\char`\&}
+\def\PYZlt{\char`\<}
+\def\PYZgt{\char`\>}
+\def\PYZsh{\char`\#}
+\def\PYZpc{\char`\%}
+\def\PYZdl{\char`\$}
+\def\PYZhy{\char`\-}
+\def\PYZsq{\char`\'}
+\def\PYZdq{\char`\"}
+\def\PYZti{\char`\~}
+% for compatibility with earlier versions
+\def\PYZat{@}
+\def\PYZlb{[}
+\def\PYZrb{]}
+\makeatother
+
+
+    % Exact colors from NB
+    \definecolor{incolor}{rgb}{0.0, 0.0, 0.5}
+    \definecolor{outcolor}{rgb}{0.545, 0.0, 0.0}
+
+
+
+    
+    % Prevent overflowing lines due to hard-to-break entities
+    \sloppy 
+    % Setup hyperref package
+    \hypersetup{
+      breaklinks=true,  % so long urls are correctly broken across lines
+      colorlinks=true,
+      urlcolor=urlcolor,
+      linkcolor=linkcolor,
+      citecolor=citecolor,
+      }
+    % Slightly bigger margins than the latex defaults
+    
+    \geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+    
+    
+
+
+    
+    \usepackage{standalone}
+    % \usepackage[utf8]{inputenc}
+
+    % Default fixed font does not support bold face
+    \DeclareFixedFont{\ttb}{T1}{txtt}{bx}{n}{12} % for bold
+    \DeclareFixedFont{\ttm}{T1}{txtt}{m}{n}{12}  % for normal
+    
+    % Custom colors
+    \usepackage{color}
+    \definecolor{deepblue}{rgb}{0,0,0.5}
+    \definecolor{deepred}{rgb}{0.6,0,0}
+    \definecolor{deepgreen}{rgb}{0,0.5,0}
+    
+    \usepackage{listings}
+    
+    \lstdefinestyle{customasm}{
+        xleftmargin=-60px,
+        xrightmargin=-60px
+    }   
+
+    % Python style for highlighting
+    \newcommand\pythonstyle{\lstset{
+    language=Python,
+    basicstyle=\small,
+    otherkeywords={self},             % Add keywords here
+    keywordstyle=\small\color{deepblue},
+    emph={MyClass,__init__},          % Custom highlighting
+    emphstyle=\small\color{deepred},    % Custom highlighting style
+    stringstyle=\color{deepgreen},
+    frame=tb,                         % Any extra options here
+    showstringspaces=false,
+    breaklines=true,
+    style=customasm             
+    }}
+    
+    
+    % Python environment
+    \lstnewenvironment{python}[1][]
+    {
+    \pythonstyle
+    \lstset{#1}
+    }
+    {}
+    
+    % Python for external files
+    \newcommand\pythonexternal[2][]{{
+    \pythonstyle
+    \lstinputlisting[#1]{#2}}}
+    
+    % Python for inline
+    \newcommand\pythoninline[1]{{\pythonstyle\lstinline!#1!}}
+    % \usepackage{amsmath}
+    \usepackage{hyperref}
+    \usepackage{fancyvrb}
+
+    \DeclareMathOperator*{\argmax}{argmax}
+\begin{document}
+\title{Machine Learning homework 3 solution \\
+        \large Linear Regression}
+
+\author{Wiktor Jurasz - M.Nr. 03709419}
+\maketitle
+\section{Problem 1}
+
+    
+\hypertarget{programming-assignment-2-linear-regression}{%
+\subsection{Programming assignment 2: Linear
+regression}\label{programming-assignment-2-linear-regression}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}2}]:} \PY{k+kn}{import} \PY{n+nn}{numpy} \PY{k}{as} \PY{n+nn}{np}
+        
+        \PY{k+kn}{from} \PY{n+nn}{sklearn}\PY{n+nn}{.}\PY{n+nn}{datasets} \PY{k}{import} \PY{n}{load\PYZus{}boston}
+        \PY{k+kn}{from} \PY{n+nn}{sklearn}\PY{n+nn}{.}\PY{n+nn}{model\PYZus{}selection} \PY{k}{import} \PY{n}{train\PYZus{}test\PYZus{}split}
+\end{Verbatim}
+
+    \hypertarget{your-task}{%
+\subsubsection{Your task}\label{your-task}}
+
+    In this notebook code skeleton for performing linear regression is
+given. Your task is to complete the functions where required. You are
+only allowed to use built-in Python functions, as well as any
+\texttt{numpy} functions. No other libraries / imports are allowed.
+
+    \hypertarget{load-and-preprocess-the-data}{%
+\subsubsection{Load and preprocess the
+data}\label{load-and-preprocess-the-data}}
+
+    I this assignment we will work with the Boston Housing Dataset. The data
+consists of 506 samples. Each sample represents a district in the city
+of Boston and has 13 features, such as crime rate or taxation level. The
+regression target is the median house price in the given district (in
+\$1000's).
+
+More details can be found here: http://lib.stat.cmu.edu/datasets/boston
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}3}]:} \PY{n}{X} \PY{p}{,} \PY{n}{y} \PY{o}{=} \PY{n}{load\PYZus{}boston}\PY{p}{(}\PY{n}{return\PYZus{}X\PYZus{}y}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+        
+        \PY{c+c1}{\PYZsh{} Add a vector of ones to the data matrix to absorb the bias term}
+        \PY{c+c1}{\PYZsh{} (Recall slide \PYZsh{}7 from the lecture)}
+        \PY{n}{X} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{hstack}\PY{p}{(}\PY{p}{[}\PY{n}{np}\PY{o}{.}\PY{n}{ones}\PY{p}{(}\PY{p}{[}\PY{n}{X}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{)}\PY{p}{,} \PY{n}{X}\PY{p}{]}\PY{p}{)}
+        \PY{c+c1}{\PYZsh{} From now on, D refers to the number of features in the AUGMENTED dataset}
+        \PY{c+c1}{\PYZsh{}  (i.e. including the dummy \PYZsq{}1\PYZsq{} feature for the absorbed bias term)}
+        
+        \PY{c+c1}{\PYZsh{} Split into train and test}
+        \PY{n}{test\PYZus{}size} \PY{o}{=} \PY{l+m+mf}{0.2}
+        \PY{n}{X\PYZus{}train}\PY{p}{,} \PY{n}{X\PYZus{}test}\PY{p}{,} \PY{n}{y\PYZus{}train}\PY{p}{,} \PY{n}{y\PYZus{}test} \PY{o}{=} \PY{n}{train\PYZus{}test\PYZus{}split}\PY{p}{(}\PY{n}{X}\PY{p}{,} \PY{n}{y}\PY{p}{,} \PY{n}{test\PYZus{}size}\PY{o}{=}\PY{n}{test\PYZus{}size}\PY{p}{)}
+\end{Verbatim}
+
+    \hypertarget{task-1-fit-standard-linear-regression}{%
+\subsubsection{Task 1: Fit standard linear
+regression}\label{task-1-fit-standard-linear-regression}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}18}]:} \PY{k}{def} \PY{n+nf}{fit\PYZus{}least\PYZus{}squares}\PY{p}{(}\PY{n}{X}\PY{p}{,} \PY{n}{y}\PY{p}{)}\PY{p}{:}
+             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Fit ordinary least squares model to the data.}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    Parameters}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    X : array, shape [N, D]}
+         \PY{l+s+sd}{        (Augmented) feature matrix.}
+         \PY{l+s+sd}{    y : array, shape [N]}
+         \PY{l+s+sd}{        Regression targets.}
+         \PY{l+s+sd}{        }
+         \PY{l+s+sd}{    Returns}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    w : array, shape [D]}
+         \PY{l+s+sd}{        Optimal regression coefficients (w[0] is the bias term).}
+         \PY{l+s+sd}{        }
+         \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+             \PY{c+c1}{\PYZsh{} np.linalg.pinv(X\PYZus{}train).dot(y\PYZus{}train)}
+             \PY{k}{return} \PY{n}{np}\PY{o}{.}\PY{n}{linalg}\PY{o}{.}\PY{n}{solve}\PY{p}{(}\PY{n}{X}\PY{o}{.}\PY{n}{T}\PY{o}{.}\PY{n}{dot}\PY{p}{(}\PY{n}{X}\PY{p}{)}\PY{p}{,} \PY{n}{X}\PY{o}{.}\PY{n}{T}\PY{o}{.}\PY{n}{dot}\PY{p}{(}\PY{n}{y}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+
+    \hypertarget{task-2-fit-ridge-regression}{%
+\subsubsection{Task 2: Fit ridge
+regression}\label{task-2-fit-ridge-regression}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}56}]:} \PY{k}{def} \PY{n+nf}{fit\PYZus{}ridge}\PY{p}{(}\PY{n}{X}\PY{p}{,} \PY{n}{y}\PY{p}{,} \PY{n}{reg\PYZus{}strength}\PY{p}{)}\PY{p}{:}
+             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Fit ridge regression model to the data.}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    Parameters}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    X : array, shape [N, D]}
+         \PY{l+s+sd}{        (Augmented) feature matrix.}
+         \PY{l+s+sd}{    y : array, shape [N]}
+         \PY{l+s+sd}{        Regression targets.}
+         \PY{l+s+sd}{    reg\PYZus{}strength : float}
+         \PY{l+s+sd}{        L2 regularization strength (denoted by lambda in the lecture)}
+         \PY{l+s+sd}{        }
+         \PY{l+s+sd}{    Returns}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    w : array, shape [D]}
+         \PY{l+s+sd}{        Optimal regression coefficients (w[0] is the bias term).}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+             \PY{k}{return} \PY{n}{np}\PY{o}{.}\PY{n}{linalg}\PY{o}{.}\PY{n}{solve}\PY{p}{(}\PY{n}{X}\PY{o}{.}\PY{n}{T}\PY{o}{.}\PY{n}{dot}\PY{p}{(}\PY{n}{X}\PY{p}{)} \PY{o}{+} \PY{n}{reg\PYZus{}strength} 
+                                    \PY{o}{*} \PY{n}{np}\PY{o}{.}\PY{n}{identity}\PY{p}{(}\PY{n}{X}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{)}\PY{p}{,} \PY{n}{X}\PY{o}{.}\PY{n}{T}\PY{o}{.}\PY{n}{dot}\PY{p}{(}\PY{n}{y}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+
+    \hypertarget{task-3-generate-predictions-for-new-data}{%
+\subsubsection{Task 3: Generate predictions for new
+data}\label{task-3-generate-predictions-for-new-data}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}60}]:} \PY{k}{def} \PY{n+nf}{predict\PYZus{}linear\PYZus{}model}\PY{p}{(}\PY{n}{X}\PY{p}{,} \PY{n}{w}\PY{p}{)}\PY{p}{:}
+             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Generate predictions for the given samples.}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    Parameters}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    X : array, shape [N, D]}
+         \PY{l+s+sd}{        (Augmented) feature matrix.}
+         \PY{l+s+sd}{    w : array, shape [D]}
+         \PY{l+s+sd}{        Regression coefficients.}
+         \PY{l+s+sd}{        }
+         \PY{l+s+sd}{    Returns}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    y\PYZus{}pred : array, shape [N]}
+         \PY{l+s+sd}{        Predicted regression targets for the input data.}
+         \PY{l+s+sd}{        }
+         \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+             \PY{k}{return} \PY{n}{X}\PY{o}{.}\PY{n}{dot}\PY{p}{(}\PY{n}{w}\PY{p}{)}
+\end{Verbatim}
+
+    \hypertarget{task-4-mean-squared-error}{%
+\subsubsection{Task 4: Mean squared
+error}\label{task-4-mean-squared-error}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}50}]:} \PY{k}{def} \PY{n+nf}{mean\PYZus{}squared\PYZus{}error}\PY{p}{(}\PY{n}{y\PYZus{}true}\PY{p}{,} \PY{n}{y\PYZus{}pred}\PY{p}{)}\PY{p}{:}
+             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Compute mean squared error between true and predicted regression targets.}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    Reference: `https://en.wikipedia.org/wiki/Mean\PYZus{}squared\PYZus{}error`}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    Parameters}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    y\PYZus{}true : array}
+         \PY{l+s+sd}{        True regression targets.}
+         \PY{l+s+sd}{    y\PYZus{}pred : array}
+         \PY{l+s+sd}{        Predicted regression targets.}
+         \PY{l+s+sd}{        }
+         \PY{l+s+sd}{    Returns}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    mse : float}
+         \PY{l+s+sd}{        Mean squared error.}
+         \PY{l+s+sd}{        }
+         \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+             \PY{k}{return} \PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{square}\PY{p}{(}\PY{n}{y\PYZus{}true} \PY{o}{\PYZhy{}} \PY{n}{y\PYZus{}pred}\PY{p}{)}\PY{p}{)}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{p}{)}
+\end{Verbatim}
+
+    \hypertarget{compare-the-two-models}{%
+\subsubsection{Compare the two models}\label{compare-the-two-models}}
+
+    The reference implementation produces * MSE for Least squares
+\(\approx\) \textbf{23.98} * MSE for Ridge regression \(\approx\)
+\textbf{21.05}
+
+You results might be slightly (i.e. \(\pm 1\%\)) different from the
+reference soultion due to numerical reasons.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}64}]:} \PY{c+c1}{\PYZsh{} Load the data}
+         \PY{n}{np}\PY{o}{.}\PY{n}{random}\PY{o}{.}\PY{n}{seed}\PY{p}{(}\PY{l+m+mi}{1234}\PY{p}{)}
+         \PY{n}{X} \PY{p}{,} \PY{n}{y} \PY{o}{=} \PY{n}{load\PYZus{}boston}\PY{p}{(}\PY{n}{return\PYZus{}X\PYZus{}y}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+         \PY{n}{X} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{hstack}\PY{p}{(}\PY{p}{[}\PY{n}{np}\PY{o}{.}\PY{n}{ones}\PY{p}{(}\PY{p}{[}\PY{n}{X}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{)}\PY{p}{,} \PY{n}{X}\PY{p}{]}\PY{p}{)}
+         \PY{n}{test\PYZus{}size} \PY{o}{=} \PY{l+m+mf}{0.2}
+         \PY{n}{X\PYZus{}train}\PY{p}{,} \PY{n}{X\PYZus{}test}\PY{p}{,} \PY{n}{y\PYZus{}train}\PY{p}{,} \PY{n}{y\PYZus{}test} \PY{o}{=} \PY{n}{train\PYZus{}test\PYZus{}split}\PY{p}{(}\PY{n}{X}\PY{p}{,} \PY{n}{y}\PY{p}{,} \PY{n}{test\PYZus{}size}\PY{o}{=}\PY{n}{test\PYZus{}size}\PY{p}{)}
+         
+         \PY{c+c1}{\PYZsh{} Ordinary least squares regression}
+         \PY{n}{w\PYZus{}ls} \PY{o}{=} \PY{n}{fit\PYZus{}least\PYZus{}squares}\PY{p}{(}\PY{n}{X\PYZus{}train}\PY{p}{,} \PY{n}{y\PYZus{}train}\PY{p}{)}
+         \PY{n}{y\PYZus{}pred\PYZus{}ls} \PY{o}{=} \PY{n}{predict\PYZus{}linear\PYZus{}model}\PY{p}{(}\PY{n}{X\PYZus{}test}\PY{p}{,} \PY{n}{w\PYZus{}ls}\PY{p}{)}
+         \PY{n}{mse\PYZus{}ls} \PY{o}{=} \PY{n}{mean\PYZus{}squared\PYZus{}error}\PY{p}{(}\PY{n}{y\PYZus{}test}\PY{p}{,} \PY{n}{y\PYZus{}pred\PYZus{}ls}\PY{p}{)}
+         \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{MSE for Least squares = }\PY{l+s+si}{\PYZob{}0\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{mse\PYZus{}ls}\PY{p}{)}\PY{p}{)}
+         \PY{c+c1}{\PYZsh{} }
+         \PY{c+c1}{\PYZsh{} \PYZsh{} Ridge regression}
+         \PY{n}{reg\PYZus{}strength} \PY{o}{=} \PY{l+m+mi}{1}
+         \PY{n}{w\PYZus{}ridge} \PY{o}{=} \PY{n}{fit\PYZus{}ridge}\PY{p}{(}\PY{n}{X\PYZus{}train}\PY{p}{,} \PY{n}{y\PYZus{}train}\PY{p}{,} \PY{n}{reg\PYZus{}strength}\PY{p}{)}
+         \PY{n}{y\PYZus{}pred\PYZus{}ridge} \PY{o}{=} \PY{n}{predict\PYZus{}linear\PYZus{}model}\PY{p}{(}\PY{n}{X\PYZus{}test}\PY{p}{,} \PY{n}{w\PYZus{}ridge}\PY{p}{)}
+         \PY{n}{mse\PYZus{}ridge} \PY{o}{=} \PY{n}{mean\PYZus{}squared\PYZus{}error}\PY{p}{(}\PY{n}{y\PYZus{}test}\PY{p}{,} \PY{n}{y\PYZus{}pred\PYZus{}ridge}\PY{p}{)}
+         \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{MSE for Ridge regression = }\PY{l+s+si}{\PYZob{}0\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{mse\PYZus{}ridge}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+MSE for Least squares = 23.96457138495054
+MSE for Ridge regression = 21.03493121591798
+
+    \end{Verbatim}
+
+
+    % Add a bibliography block to the postdoc
+    
+    
+\section{Problem 2}
+\subsection{Minimizing Error}
+\begin{equation}
+    E_w(\omega)=\frac{1}{2}\sum_{i=1}^N t_i[\omega^T \phi(x_i)  - y_i] = 
+    \frac{1}{2} [\Phi\omega - \mathbf{y}]^T T [\Phi\omega - \mathbf{y}] 
+\end{equation}
+Where $T$ is diagonal matrix $NxN$ with $T_{i,i} = t_i$\\
+Expading this equation we get:
+\begin{equation}
+    E_w(\omega)= \frac{1}{2} [\omega^T\Phi^TT\Phi\omega - \omega^T\Phi^TT\mathbf{y} - \mathbf{y}^TT\Phi\omega + \mathbf{y}^TT\mathbf{y}]
+\end{equation}
+To find $\omega$ that minimize the value we caluclate $\nabla_\omega E_w(\omega)$:
+\begin{equation}
+    \nabla_\omega(\omega^T\Phi^TT\Phi\omega) = \omega^T(\Phi^TT\Phi + (\Phi^TT\Phi)^T) = \omega^T(\Phi^TT\Phi + \Phi^TT\Phi) =
+    2\omega^T\Phi^TT\Phi 
+\end{equation}
+\begin{equation}
+    \nabla_\omega(\omega^T\Phi^TT\mathbf{y}) = (\Phi^TT\mathbf{y})^T = \mathbf{y}^TT\Phi 
+\end{equation}
+\begin{equation}
+    \nabla_\omega(\mathbf{y}^TT\Phi\omega) = \mathbf{y}^TT\Phi 
+\end{equation}
+\begin{equation}
+    \nabla_\omega(\mathbf{y}^TT\mathbf{y}) = 0 
+\end{equation}
+Using: $T$ is diagonal $\Rightarrow T$ is simmetric $\Rightarrow T^T=T$\\
+From above equations we have:
+\begin{equation}
+    \nabla_\omega E_w(\omega) = \omega^T\Phi^TT\Phi  - \mathbf{y}^TT\Phi 
+\end{equation}
+Now comparing it to $0$ and Transposing we have finall solution:
+\begin{equation}
+    \Phi^TT\Phi\omega = \Phi^TT\mathbf{y} \Rightarrow \omega=(\Phi^TT\Phi)^1\Phi^TT\mathbf{y} 
+\end{equation}
+Since it was said on the lecture that $\nabla_\omega \nabla_\omega E(\omega) = \Phi^T\Phi$ is positive (semi)definite and we have by 
+assumption that all values of $T$ are positive, thus $\nabla_\omega \nabla_\omega E_w(\omega) = \Phi^TT\Phi$ is also positive (semi)definite, 
+so equation $(8)$ is minimal solution for $\omega$  
+\subsection{Variance of the noise}
+It might be that the variance of noise is not constant (data are heteroskedast). It means that some obervations have higher noise
+variance then others, so we cannot predict with the same accuracy for all points. We can use $T$ to put more emphasis on points with
+smaller variance by setting $t_i = \frac{1}{\sigma_i^2}$
+\subsection{Exact Copies}
+If our dataset contains duplicated, regression is biased in their direction (the duplicated points have higher impact on regression line).
+However we might want to eliminate duplicates (or minimize their impact) by setting lower weight $t$ on such cases 
+(e.g $t=\frac{1}{|duplicates|}$ for all subsets of observations that have the same $X$ and $y$). 
+\section{Problem 3}
+\subsection{Notation}
+$A$ denotes augmented design matrix and $\mathbf{U}$ denotes augmented values vector.\\
+Let's also define a function $f$:
+\[ f(i,j,\lambda) =  \begin{cases} 
+    0 & i \neq j \\
+    \lambda & i = j 
+ \end{cases}
+\]
+Matrix form of ridge regression:
+\begin{equation}
+    w_r^*=(\lambda I_D + \Phi^T\Phi)^{-1}\Phi^T\mathbf{y}    
+\end{equation}
+Matrix form of augmented regression:
+\begin{equation}
+    w_a ^*=(A^TA)^{-1}A^TU    
+\end{equation}
+\subsection{Proof}
+Show that $w_r^*=w_a^*$
+\subsubsection{Part 1}
+First we show that $\lambda I_D + \Phi^T\Phi = L $ is the same as $A^TA = D$.\\\\
+Single element of $L$:
+\begin{equation}
+    l_{i,j} = \sum_{k=1}^{N}\phi_{i,k}^T\phi_{k,j} + f(i,j,\lambda)    
+\end{equation}
+The (i,j) element of $D$ is equal to 
+\begin{equation}
+    d_{i,j} = \sum_{k=1}^{N+M}a_{i,k}^Ta_{k,j}    
+\end{equation}
+Now we make following obervation $\forall k>N$:\\
+if $i\neq j$ $a_{i,k}^Ta_{k,j} = 0$ else $a_{i,k}^Ta_{k,j} = \sqrt{\lambda}* \sqrt{\lambda} = \lambda$. 
+Thus every element of $D$ can be expressed as follows:
+\begin{equation}
+    d_{i,j} = \sum_{k=1}^N[a_{i,k}^Ta_{k,j}] + f(i,j,\lambda)
+\end{equation} 
+From problem description we also know that $\forall i \leq N$, $i-th$ row of $A$ is equal to $i-th$ row of $\Phi$
+(The same for columns for transposed $\Phi$ and $A$).
+So we can rewrite $(13)$ equation in to following form:
+\begin{equation}
+    d_{i,j} = \sum_{k=1}^N[\phi_{i,k}^T\phi_{k,j}] + f(i,j,\lambda)
+\end{equation} 
+From above:
+\begin{equation}
+    L = D
+\end{equation}
+\subsubsection{Part 2}
+Now we show that $\Phi^T\mathbf{y} = L$ is the same as $A^TU = D$.\\\\
+Single element of $L$:
+\begin{equation}
+    l_{i,j} = \sum_{k=1}^{N}\phi_{i,k}^T\mathbf{y}_k     
+\end{equation}
+The (i,j) element of $D$ is equal to 
+\begin{equation}
+    d_{i,j} = \sum_{k=1}^{N+M}a_{i,k}^Tu_{k}    
+\end{equation} 
+From problem descriptoin we know that $\forall k>N$, $u_k = 0$ 
+Thus every element of $D$ can be expressed as follows:
+\begin{equation}
+    d_{i,j} = \sum_{k=1}^{N}a_{i,k}^Tu_{k} 
+\end{equation} 
+From problem description we also know that $\forall i \leq N$, 
+$i-th$ row of $A$ is equal to $i-th$ row of $\Phi$ (The same for columns for transposed $\Phi$ and $A$),
+and $i-th$ row of $U$ is equal to $i-th$ row of $\mathbf{y}$
+So we can rewrite $(18)$ equation in to following form:
+\begin{equation}
+    d_{i,j} = \sum_{k=1}^{N}\phi_{i,k}^T\mathbf{y}_k
+\end{equation} 
+From above:
+\begin{equation}
+    L = D
+\end{equation}
+\subsubsection{Part 3}
+From part 1:
+\begin{equation}
+    \lambda I_D + \Phi^T\Phi = A^TA    
+\end{equation}
+From part 2: 
+\begin{equation}
+    \Phi^T\mathbf{y} = A^TU
+\end{equation}
+Thus $w_r^*=w_a^*$ Q.E.D.
+\end{document}

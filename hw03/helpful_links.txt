@@ -1,0 +1,2 @@
+https://www.comp.nus.edu.sg/~cs5240/lecture/matrix-differentiation.pdf
+https://www.stat.cmu.edu/~cshalizi/mreg/15/lectures/24/lecture-24--25.pdf

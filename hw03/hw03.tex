@@ -528,7 +528,7 @@ MSE for Ridge regression = 21.03493121591798
 \section{Problem 2}
 \subsection{Minimizing Error}
 \begin{equation}
-    E_w(\omega)=\frac{1}{2}\sum_{i=1}^N t_i[\omega^T \phi(x_i)  - y_i] = 
+    E_w(\omega)=\frac{1}{2}\sum_{i=1}^N t_i[\omega^T \phi(x_i)  - y_i] ^2 = 
     \frac{1}{2} [\Phi\omega - \mathbf{y}]^T T [\Phi\omega - \mathbf{y}] 
 \end{equation}
 Where $T$ is diagonal matrix $NxN$ with $T_{i,i} = t_i$\\
@@ -651,4 +651,45 @@ From part 2:
     \Phi^T\mathbf{y} = A^TU
 \end{equation}
 Thus $w_r^*=w_a^*$ Q.E.D.
+\section{Problem 4}
+\subsection{Normal-Gamma PDF}
+\begin{multline}
+    p(\omega, \beta) = \mathcal{N}(\omega|m_0, \beta^{-1}S_0)Gamma(\beta|a_0,b_0) =\\=
+    \frac{1}{\sqrt{2\pi \beta^{-1}S_0}} * e ^ {\frac{-((\omega - m_0)^2}{2\beta^{-1}S_0}} *
+    \frac{b_0^{a_0}}{\Gamma(a_0)} * \beta^{a_0 - 1} * e^{-b_0 * \beta} =\\
+    = \frac{b_0^{a_0}}{\sqrt{S_0 2\pi} \Gamma(a_0)} * \beta^{a_0 - \frac{1}{2}} * e ^{-b_0\beta - \frac{\beta(\omega-m_0)^2}{2S_0}}
+\end{multline}
+\subsection{Likelihood}
+\begin{multline}
+    p(\mathbf{y} | \Phi, \omega, \beta) =  
+    \prod_{i=1}^N\mathcal{N}(y_i|\omega^T\phi(x_i),\beta^{-1}) = \\ 
+    \prod_{i=1}^N \sqrt{\frac{\beta}{2\pi}} * e^{\frac{-\beta}{2} (\omega^T\phi(x_i) - y_i)^2} = \\
+    (\frac{\beta}{2\pi})^{\frac{N}{2}} * e^{\frac{-\beta}{2} \sum_{i=1}^N(\omega^T\phi(x_i) - y_i)^2} =\\
+    (\frac{\beta}{2\pi})^{\frac{N}{2}} * e^{\frac{-\beta}{2} \sum_{i=1}^N(\omega^T\phi(x_i) - \bar{y} + \bar{y} - y_i)^2} = \\ 
+    (\frac{\beta}{2\pi})^{\frac{N}{2}} * e^{\frac{-\beta}{2} \sum_{i=1}^N[(\omega^T\phi(x_i) - \bar{y})^2 + (\bar{y} - y_i)^2]} =\\
+    (\frac{\beta}{2\pi})^{\frac{N}{2}} * e^{\frac{-\beta}{2} (n\mu + ns)}
+\end{multline}
+Where $\bar{y} = \frac{1}{n} \sum_{i=1}^N y_i$ and $\mu = \frac{1}{n}\sum_{i=1}^N(\omega^T\phi(x_i) - \bar{y})^2$ and 
+$s = \frac{1}{n}\sum_{i=1}^N(\bar{y} - y_i)^2$  
+\subsection{Posteriori}
+\begin{multline}
+    p(\omega, \beta | D) =  \mathcal{N}(\omega|m_N, \beta^{-1}S_N)Gamma(\beta|a_N,b_N) = \\
+    (\frac{\beta}{2\pi})^{\frac{N}{2}} * e^{\frac{-\beta}{2} (n\mu + ns)} * \frac{b_0^{a_0}}{\sqrt{S_0 2\pi} \Gamma(a_0)} * \beta^{a_0 - \frac{1}{2}} * e ^{-b_0\beta - \frac{\beta(\omega-m_0)^2}{2S_0}} =\\
+    [(\frac{1}{2\pi})^{\frac{N}{2}} * \frac{b_0^{a_0}}{\sqrt{S_0 2\pi} \Gamma(a_0)}] * \beta^{\frac{N}{2} + a_0 - \frac{1}{2}} *  e^{\frac{-\beta}{2} (n\mu + ns)} * e ^{-b_0\beta - \frac{\beta(\omega-m_0)^2}{2S_0}} \propto \\
+    \beta^{\frac{N}{2} + a_0 - \frac{1}{2}} *  e^{\frac{-\beta}{2} (n\mu + ns)} * e ^{-b_0\beta - \frac{\beta(\omega-m_0)^2}{2S_0}} \propto \\
+    \beta^{\frac{N}{2} + a_0 - \frac{1}{2}} *  e^{-\beta(b_0 + \frac{n\mu}{2} + \frac{ns}{2})} * e ^{\frac{\beta(\omega-m_0)^2}{2S_0}}
+\end{multline}
+From above we can derive:
+\begin{equation}
+    m_N = m_0
+\end{equation}
+\begin{equation}
+    S_N = S_0
+\end{equation}
+\begin{equation}
+    b_N = b_0 + \frac{n\mu}{2} + \frac{ns}{2}
+\end{equation}
+\begin{equation}
+    a_N = a_0 + \frac{N}{2}
+\end{equation}
 \end{document}

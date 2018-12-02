@@ -525,4 +525,227 @@ In SVN dual optimization we try to maximize $g(\alpha)$. Maximization is much
 more efficient when function is concave (i.e. Have only one (global) maximum). 
 Thanks to negative semi-definiteness we know that $g(\alpha)$ is concave and 
 maximization problem can be solved in polynomial time (in other case the problem is NP-hard).
+
+\section{Programming assignment 6}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor} }]:} \PY{k+kn}{import} \PY{n+nn}{numpy} \PY{k}{as} \PY{n+nn}{np}
+        \PY{k+kn}{import} \PY{n+nn}{matplotlib}\PY{n+nn}{.}\PY{n+nn}{pyplot} \PY{k}{as} \PY{n+nn}{plt}
+        \PY{o}{\PYZpc{}}\PY{k}{matplotlib} inline
+        
+        \PY{k+kn}{from} \PY{n+nn}{sklearn}\PY{n+nn}{.}\PY{n+nn}{datasets} \PY{k}{import} \PY{n}{make\PYZus{}blobs}
+        
+        \PY{k+kn}{from} \PY{n+nn}{cvxopt} \PY{k}{import} \PY{n}{matrix}\PY{p}{,} \PY{n}{solvers}
+\end{Verbatim}
+
+    \hypertarget{exporting-the-results-to-pdf}{%
+\subsection{Exporting the results to
+PDF}\label{exporting-the-results-to-pdf}}
+
+Once you complete the assignments, export the entire notebook as PDF and
+attach it to your homework solutions. The best way of doing that is 1.
+Run all the cells of the notebook. 2. Download the notebook in HTML
+(click File \textgreater{} Download as \textgreater{} .html) 3. Convert
+the HTML to PDF using e.g.~https://www.sejda.com/html-to-pdf or
+\texttt{wkhtmltopdf} for Linux
+(\href{https://www.cyberciti.biz/open-source/html-to-pdf-freeware-linux-osx-windows-software/}{tutorial})
+4. Concatenate your solutions for other tasks with the output of Step 3.
+On a Linux machine you can simply use \texttt{pdfunite}, there are
+similar tools for other platforms too. You can only upload a single PDF
+file to Moodle.
+
+This way is preferred to using \texttt{nbconvert}, since
+\texttt{nbconvert} clips lines that exceed page width and makes your
+code harder to grade.
+
+    \hypertarget{your-task}{%
+\subsection{Your task}\label{your-task}}
+
+    In this sheet we will implement a simple binary SVM classifier.
+
+We will use \textbf{\texttt{CVXOPT}} http://cvxopt.org/ - a Python
+library for convex optimization. If you use \texttt{Anaconda}, you can
+install it using
+
+\begin{verbatim}
+conda install cvxopt
+\end{verbatim}
+
+As usual, your task is to fill out the missing code, run the notebook,
+convert it to PDF and attach it you your HW solution.
+
+    \hypertarget{generate-and-visualize-the-data}{%
+\subsection{Generate and visualize the
+data}\label{generate-and-visualize-the-data}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}11}]:} \PY{n}{N} \PY{o}{=} \PY{l+m+mi}{100}  \PY{c+c1}{\PYZsh{} number of samples}
+         \PY{n}{D} \PY{o}{=} \PY{l+m+mi}{2}  \PY{c+c1}{\PYZsh{} number of dimensions}
+         \PY{n}{C} \PY{o}{=} \PY{l+m+mi}{2}  \PY{c+c1}{\PYZsh{} number of classes}
+         \PY{n}{seed} \PY{o}{=} \PY{l+m+mi}{3}  \PY{c+c1}{\PYZsh{} for reproducible experiments}
+         
+         \PY{n}{X}\PY{p}{,} \PY{n}{y} \PY{o}{=} \PY{n}{make\PYZus{}blobs}\PY{p}{(}\PY{n}{n\PYZus{}samples}\PY{o}{=}\PY{n}{N}\PY{p}{,} \PY{n}{n\PYZus{}features}\PY{o}{=}\PY{n}{D}\PY{p}{,} \PY{n}{centers}\PY{o}{=}\PY{l+m+mi}{2}\PY{p}{,} \PY{n}{random\PYZus{}state}\PY{o}{=}\PY{n}{seed}\PY{p}{)}
+         \PY{n}{y}\PY{p}{[}\PY{n}{y} \PY{o}{==} \PY{l+m+mi}{0}\PY{p}{]} \PY{o}{=} \PY{o}{\PYZhy{}}\PY{l+m+mi}{1}  \PY{c+c1}{\PYZsh{} it is more convenient to have \PYZob{}\PYZhy{}1, 1\PYZcb{} as class labels (instead of \PYZob{}0, 1\PYZcb{})}
+         \PY{n}{y} \PY{o}{=} \PY{n}{y}\PY{o}{.}\PY{n}{astype}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{float}\PY{p}{)}
+         \PY{n}{plt}\PY{o}{.}\PY{n}{figure}\PY{p}{(}\PY{n}{figsize}\PY{o}{=}\PY{p}{[}\PY{l+m+mi}{10}\PY{p}{,} \PY{l+m+mi}{8}\PY{p}{]}\PY{p}{)}
+         \PY{n}{plt}\PY{o}{.}\PY{n}{scatter}\PY{p}{(}\PY{n}{X}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{X}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{n}{c}\PY{o}{=}\PY{n}{y}\PY{p}{)}
+         \PY{n}{plt}\PY{o}{.}\PY{n}{show}\PY{p}{(}\PY{p}{)}
+\end{Verbatim}
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{output_6_0.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    \hypertarget{task-1-solving-the-svm-dual-problem}{%
+\subsection{Task 1: Solving the SVM dual
+problem}\label{task-1-solving-the-svm-dual-problem}}
+
+    Remember, that the SVM dual problem can be formulated as a Quadratic
+programming (QP) problem. We will solve it using a QP solver from the
+\texttt{CVXOPT} library.
+
+The general form of a QP is
+\[\min_{\mathbf{x}} \frac{1}{2}\mathbf{x}^T \mathbf{P} \mathbf{x} + \mathbf{q}^T \mathbf{x}\]
+
+\[\text{subject to } \quad \mathbf{G}\mathbf{x} \preceq \mathbf{h}\]
+
+\[\text{and } \quad \mathbf{A}\mathbf{x} = \mathbf{b}\]
+
+where \(\preceq\) denotes ``elementwise less than or equal to''.
+
+\textbf{Your task} is to formulate the SVM dual problems as a QP and
+solve it using \texttt{CVXOPT}, i.e.~specify the matrices
+\(\mathbf{P}, \mathbf{G}, \mathbf{A}\) and vectors
+\(\mathbf{q}, \mathbf{h}, \mathbf{b}\).
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}16}]:} \PY{k}{def} \PY{n+nf}{solve\PYZus{}dual\PYZus{}svm}\PY{p}{(}\PY{n}{X}\PY{p}{,} \PY{n}{y}\PY{p}{)}\PY{p}{:}
+             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Solve the dual formulation of the SVM problem.}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    Parameters}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    X : array, shape [N, D]}
+         \PY{l+s+sd}{        Input features.}
+         \PY{l+s+sd}{    y : array, shape [N]}
+         \PY{l+s+sd}{        Binary class labels (in \PYZob{}\PYZhy{}1, 1\PYZcb{} format).}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    Returns}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    alphas : array, shape [N]}
+         \PY{l+s+sd}{        Solution of the dual problem.}
+         \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+             \PY{c+c1}{\PYZsh{} TODO}
+             \PY{c+c1}{\PYZsh{} These variables have to be of type cvxopt.matrix}
+             \PY{n}{P} \PY{o}{=} \PY{n}{y}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{k+kc}{None}\PY{p}{]} \PY{o}{*} \PY{n}{X}
+             \PY{n}{P} \PY{o}{=} \PY{n}{matrix}\PY{p}{(}\PY{n}{P} \PY{o}{@} \PY{n}{P}\PY{o}{.}\PY{n}{T}\PY{p}{)}
+             \PY{n}{q} \PY{o}{=} \PY{n}{matrix}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{n}{np}\PY{o}{.}\PY{n}{ones}\PY{p}{(}\PY{p}{(}\PY{n+nb}{len}\PY{p}{(}\PY{n}{y}\PY{p}{)}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+             \PY{n}{G} \PY{o}{=} \PY{n}{matrix}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{n}{np}\PY{o}{.}\PY{n}{eye}\PY{p}{(}\PY{n+nb}{len}\PY{p}{(}\PY{n}{y}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+             \PY{n}{h} \PY{o}{=} \PY{n}{matrix}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{zeros}\PY{p}{(}\PY{p}{(}\PY{n+nb}{len}\PY{p}{(}\PY{n}{y}\PY{p}{)}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+             \PY{n}{A} \PY{o}{=} \PY{n}{matrix}\PY{p}{(}\PY{n}{y}\PY{o}{.}\PY{n}{reshape}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,} \PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{)}\PY{p}{)}
+             \PY{n}{b} \PY{o}{=} \PY{n}{matrix}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{zeros}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)}\PY{p}{)}
+             \PY{n}{solvers}\PY{o}{.}\PY{n}{options}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{show\PYZus{}progress}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{k+kc}{False}
+             \PY{n}{solution} \PY{o}{=} \PY{n}{solvers}\PY{o}{.}\PY{n}{qp}\PY{p}{(}\PY{n}{P}\PY{p}{,} \PY{n}{q}\PY{p}{,} \PY{n}{G}\PY{p}{,} \PY{n}{h}\PY{p}{,} \PY{n}{A}\PY{p}{,} \PY{n}{b}\PY{p}{)}
+             \PY{n}{alphas} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{n}{solution}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{x}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{)}
+             \PY{k}{return} \PY{n}{alphas}
+\end{Verbatim}
+
+    \hypertarget{task-2-recovering-the-weights-and-the-bias}{%
+\subsection{Task 2: Recovering the weights and the
+bias}\label{task-2-recovering-the-weights-and-the-bias}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}181}]:} \PY{k}{def} \PY{n+nf}{compute\PYZus{}weights\PYZus{}and\PYZus{}bias}\PY{p}{(}\PY{n}{alpha}\PY{p}{,} \PY{n}{X}\PY{p}{,} \PY{n}{y}\PY{p}{)}\PY{p}{:}
+              \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Recover the weights w and the bias b using the dual solution alpha.}
+          \PY{l+s+sd}{    }
+          \PY{l+s+sd}{    Parameters}
+          \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+          \PY{l+s+sd}{    alpha : array, shape [N]}
+          \PY{l+s+sd}{        Solution of the dual problem.}
+          \PY{l+s+sd}{    X : array, shape [N, D]}
+          \PY{l+s+sd}{        Input features.}
+          \PY{l+s+sd}{    y : array, shape [N]}
+          \PY{l+s+sd}{        Binary class labels (in \PYZob{}\PYZhy{}1, 1\PYZcb{} format).}
+          \PY{l+s+sd}{    }
+          \PY{l+s+sd}{    Returns}
+          \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+          \PY{l+s+sd}{    w : array, shape [D]}
+          \PY{l+s+sd}{        Weight vector.}
+          \PY{l+s+sd}{    b : float}
+          \PY{l+s+sd}{        Bias term.}
+          \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+              \PY{n}{w} \PY{o}{=} \PY{p}{(}\PY{n}{alpha}\PY{o}{.}\PY{n}{reshape}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,} \PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{)} \PY{o}{*} \PY{n}{y}\PY{p}{)} \PY{o}{@} \PY{n}{X}
+              \PY{n}{b} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{p}{(}\PY{n}{y} \PY{o}{\PYZhy{}} \PY{n}{w} \PY{o}{@} \PY{n}{X}\PY{o}{.}\PY{n}{T}\PY{p}{)}\PY{p}{)}
+              \PY{k}{return} \PY{n}{w}\PY{o}{.}\PY{n}{T}\PY{p}{,} \PY{n}{b}
+\end{Verbatim}
+
+    \hypertarget{visualize-the-result-nothing-to-do-here}{%
+\subsection{Visualize the result (nothing to do
+here)}\label{visualize-the-result-nothing-to-do-here}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}90}]:} \PY{k}{def} \PY{n+nf}{plot\PYZus{}data\PYZus{}with\PYZus{}hyperplane\PYZus{}and\PYZus{}support\PYZus{}vectors}\PY{p}{(}\PY{n}{X}\PY{p}{,} \PY{n}{y}\PY{p}{,} \PY{n}{alpha}\PY{p}{,} \PY{n}{w}\PY{p}{,} \PY{n}{b}\PY{p}{)}\PY{p}{:}
+             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Plot the data as a scatter plot together with the separating hyperplane.}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    Parameters}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    X : array, shape [N, D]}
+         \PY{l+s+sd}{        Input features.}
+         \PY{l+s+sd}{    y : array, shape [N]}
+         \PY{l+s+sd}{        Binary class labels (in \PYZob{}\PYZhy{}1, 1\PYZcb{} format).}
+         \PY{l+s+sd}{    alpha : array, shape [N]}
+         \PY{l+s+sd}{        Solution of the dual problem.}
+         \PY{l+s+sd}{    w : array, shape [D]}
+         \PY{l+s+sd}{        Weight vector.}
+         \PY{l+s+sd}{    b : float}
+         \PY{l+s+sd}{        Bias term.}
+         \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+             \PY{n}{plt}\PY{o}{.}\PY{n}{figure}\PY{p}{(}\PY{n}{figsize}\PY{o}{=}\PY{p}{[}\PY{l+m+mi}{10}\PY{p}{,} \PY{l+m+mi}{8}\PY{p}{]}\PY{p}{)}
+             \PY{c+c1}{\PYZsh{} Plot the hyperplane}
+             \PY{n}{slope} \PY{o}{=} \PY{o}{\PYZhy{}}\PY{n}{w}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]} \PY{o}{/} \PY{n}{w}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}
+             \PY{n}{intercept} \PY{o}{=} \PY{o}{\PYZhy{}}\PY{n}{b} \PY{o}{/} \PY{n}{w}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}
+             \PY{n}{x} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{linspace}\PY{p}{(}\PY{n}{X}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{o}{.}\PY{n}{min}\PY{p}{(}\PY{p}{)}\PY{p}{,} \PY{n}{X}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{o}{.}\PY{n}{max}\PY{p}{(}\PY{p}{)}\PY{p}{)}
+             \PY{n}{plt}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{x} \PY{o}{*} \PY{n}{slope} \PY{o}{+} \PY{n}{intercept}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{k\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{decision boundary}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+             \PY{c+c1}{\PYZsh{} Plot all the datapoints}
+             \PY{n}{plt}\PY{o}{.}\PY{n}{scatter}\PY{p}{(}\PY{n}{X}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{X}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{n}{c}\PY{o}{=}\PY{n}{y}\PY{p}{)}
+             \PY{c+c1}{\PYZsh{} Mark the support vectors}
+             \PY{n}{support\PYZus{}vecs} \PY{o}{=} \PY{p}{(}\PY{n}{alpha} \PY{o}{\PYZgt{}} \PY{l+m+mf}{1e\PYZhy{}4}\PY{p}{)}\PY{o}{.}\PY{n}{reshape}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{)}
+             \PY{n}{plt}\PY{o}{.}\PY{n}{scatter}\PY{p}{(}\PY{n}{X}\PY{p}{[}\PY{n}{support\PYZus{}vecs}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{X}\PY{p}{[}\PY{n}{support\PYZus{}vecs}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{n}{c}\PY{o}{=}\PY{n}{y}\PY{p}{[}\PY{n}{support\PYZus{}vecs}\PY{p}{]}\PY{p}{,} \PY{n}{s}\PY{o}{=}\PY{l+m+mi}{250}\PY{p}{,} \PY{n}{marker}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{*}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{support vectors}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+             \PY{n}{plt}\PY{o}{.}\PY{n}{xlabel}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{\PYZdl{}x\PYZus{}1\PYZdl{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+             \PY{n}{plt}\PY{o}{.}\PY{n}{ylabel}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{\PYZdl{}x\PYZus{}2\PYZdl{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+             \PY{n}{plt}\PY{o}{.}\PY{n}{legend}\PY{p}{(}\PY{n}{loc}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{upper left}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\end{Verbatim}
+
+    The reference solution is
+
+\begin{verbatim}
+w = array([[-0.69192638],
+           [-1.00973312]])
+
+b = 0.907667782
+\end{verbatim}
+
+Indices of the support vectors are
+
+\begin{verbatim}
+[38, 47, 92]
+\end{verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}184}]:} \PY{n}{alpha} \PY{o}{=} \PY{n}{solve\PYZus{}dual\PYZus{}svm}\PY{p}{(}\PY{n}{X}\PY{p}{,} \PY{n}{y}\PY{p}{)}
+          \PY{n}{w}\PY{p}{,} \PY{n}{b} \PY{o}{=} \PY{n}{compute\PYZus{}weights\PYZus{}and\PYZus{}bias}\PY{p}{(}\PY{n}{alpha}\PY{p}{,} \PY{n}{X}\PY{p}{,} \PY{n}{y}\PY{p}{)}
+          \PY{n}{plot\PYZus{}data\PYZus{}with\PYZus{}hyperplane\PYZus{}and\PYZus{}support\PYZus{}vectors}\PY{p}{(}\PY{n}{X}\PY{p}{,} \PY{n}{y}\PY{p}{,} \PY{n}{alpha}\PY{p}{,} \PY{n}{w}\PY{p}{,} \PY{n}{b}\PY{p}{)}
+          \PY{n}{plt}\PY{o}{.}\PY{n}{show}\PY{p}{(}\PY{p}{)}
+\end{Verbatim}
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{output_15_0.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor} }]:} 
+\end{Verbatim}
+
+
 \end{document}

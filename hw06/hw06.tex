@@ -328,6 +328,7 @@
     \usepackage{hyperref}
     \usepackage{fancyvrb}
     \usepackage{enumitem}
+    \usepackage{tikz}
 
 \begin{document}
 \title{Machine Learning homework 6 solution \\
@@ -383,5 +384,145 @@ has minimum.
 \end{equation}
 Because Strong duality holds we can say that $f_0$ subject to $f_1 < 0$ has minimum
 at $[-1, \sqrt{3}]$ with value $-4$
+\section{Problem 2}
+\subsection{Set Visualization}
+\begin{tikzpicture}
+    \draw[->] (-4.2,0) -- (4.2,0) node[right] {$x_1$};
+    \draw[->] (0,-4) -- (0,4.2) node[above] {$x_2$};
 
+    
+    \draw[blue] (0,0) plot[domain=-2:5] (\x,{-\x + 4}) node[anchor=south west] {$b (x_2 = -x_1 +4)$};
+    \draw[blue] (0,0) plot[domain=-2:6] (0,\x) node[anchor=south west] {$l_1$};
+    \draw[blue] (0,0) plot[domain=-7.7:6] (3,\x) node[anchor=south west] {$u_1$};
+    \draw[blue] (0,0) plot[domain=-2:6] (\x,2.5) node[anchor=south west] {$l_2$};
+    \draw[blue] (0,0) plot[domain=-2:6] (\x,0) node[anchor=south west] {$l_2$};
+    
+    \draw [ultra thick, draw=none, fill=red, opacity=0.2]
+    (0,-4.3) -- (3,-7.7) --  (3,6) -- (0,6) -- cycle;
+
+    \draw [ultra thick, draw=none, fill=red, opacity=0.2]
+    (-2,0) -- (-2,2.5) --  (6,2.5) -- (6,0) -- cycle;
+
+    \draw [ultra thick, draw=none, fill=red, opacity=0.2]
+    (-2,6) -- (-2,-2) --  (5,-10) -- (5,-1) -- cycle;
+
+    \draw [draw=none, fill=red]
+    (0,0) -- (3,0) --  (3,1) -- (1.5,2.5) -- (0,2.5) -- cycle;
+    
+    
+    \foreach \x in  {-3,-2,-1,0,1,2,3,4}
+    \draw[shift={(\x,0)},color=black] (0pt,3pt) -- (0pt,-3pt);
+    \foreach \x in {-3,-2,-1,0,1,2,3,4}
+    \draw[shift={(\x,0)},color=black] (0pt,0pt) -- (0pt,-3pt) node[below] 
+    {$\x$};
+
+
+
+    \foreach \y in  {-3,-2,-1,1,2,3,4}
+    \draw[shift={(0, \y)},color=black] (-3pt,0pt) -- (0pt,0pt);
+    \foreach \y in {-3,-2,-1,1,2,3,4}
+    \draw[shift={(0, \y)},color=black] (-3pt,0pt) -- (3pt,0pt) node[right] 
+    {$\y$};
+
+    \draw[thick, color=black] (0,0) plot[domain=-6:6] (1.5, \x) node[anchor=south west] {$x_1=1.5$};
+    \draw[thick, color=black] (0,0) plot[domain=-6:6] (\x, 1) node[anchor=south west] {$x_2=1$};
+    \draw[thick, color=black] (0,0) plot[domain=-6:6] (\x, \x + 1) node[anchor=south west] {$x_2 = x_1 + 1$};
+    \draw[thick, color=black] (0,0) plot[domain=-6:6] (\x, \x - 2) node[anchor=south west] {$x_2 = x_1 - 2$};
+
+
+    % \foreach \x in  {-3,-2,-1,1,2,3,4}
+    % \draw[shift={(0,\x)},color=black] (3pt,0pt) -- (-3pt,0pt);
+    % \foreach \x in {-3,-2,-1,1,2,3,4}
+    % \draw[shift={(0,\x)},color=black] (0pt,0pt) -- (-3pt,0pt) node[below] 
+    % {$\x$};
+
+    \end{tikzpicture}
+\subsection{Closed Form}
+    Looking at chart above, it's easy so see that all points with $x_2 < 1$ or $x_1 < 1.5$ or $x_2 x_1 \leq 4$ we can 
+    use box-constraints. For points between $x_2 = x_1 + 1$ and $x_2 = x_1 - 2$ and above $x_2 = -x_1 +4$ 
+    we can use line projection. In every other case the projection function should return
+    point $(1.5,2.5)$ or $(3,1)$ (Simple observation that those points are the nearest
+    to the projection on the line, which makes them the best choice).\\
+
+
+    \[ \pi_x(p) =  \begin{cases} 
+        a+ \frac{(p-a)^T(b-a)}{||b-a||^2_2}(b-a)& (x_2+x_1 \gt 4) \land (x_2 - x_1 < 1) \land (x_2 - x_1 > -2)  \\
+        (1.5,2.5) & x_1 > 1.5 \land (x_2 - x_1 \geq 1) \\
+        (3,1) & x_2 > 1 \land (x_2 - x_1 \leq -2) \\
+        min(max(l_i, p_i), u_i) & else 
+     \end{cases}
+    \]
+    where $a$ and $b$ are lay on the $x_2 = -x_1 +4$,
+\subsection{Gradient Descent}
+\begin{equation}
+    \nabla f(x_1,x_2) = [2x_1 - 4, 4x_2 -14]
+\end{equation}
+\begin{equation}
+    \begin{gathered}
+        \nabla f(x_0) = (1,-10) \\
+        p_1 = (2.5,1) - 0.05(1,-10) = (2.45, 0.5) = x_1 \\
+        p_2 = (2.45, 0.5) - 0.05(0.9, -12) = (2.405, -0.1) \\
+        x_2 = \pi_x(p_2) = min(max(l_i, p_i), u_i) = (2.405, 0)
+    \end{gathered}
+\end{equation}
+\section{Problem 3}
+\subsection{Similarities}
+\begin{itemize}
+    \item Linear classifiers (can also be used for non-linear classification)
+    \item Binary classifiers
+\end{itemize}
+\subsection{Differences}
+\begin{itemize}
+    \item SVM looks for the best possible separation. Where best is understood as
+    the one that represents the largest separation between two classes. While perceptron
+    looks for any separation.
+    \item SVM separation is based only on few points that are are the closest to the separation line.
+    Adding new points the set does not change the classification line (unless new points are "closer").
+    Perceptron takes all points into the account.
+\end{itemize}
+\section{Problem 4}
+SVN has a optimization form of minimizing:
+\begin{equation}
+    f_0(w,b)=\frac{1}{2} w^Tw
+\end{equation}
+Subject to:
+\begin{equation}
+    f_i(w,b) = y_i(w^Tx_i +b) - 1 \geq 0
+\end{equation}
+To show that duality gap is $0$ we can use weak Slater's condition which says
+that strong duality holds when $f_0$ is convex and $f_i$ are affine.\\
+First is satisfy as quadratic function is convex. Second is satisfy as $f_i$ are affine functions
+w.r.t $w$ and $b$.
+\section{Problem 5}
+\subsection{Matrix $Q$}
+Elementwise $g(\alpha) = \sum_i^N\alpha_i - \frac{1}{2} \sum_i^N\sum_j^N\alpha_i\alpha_jy_iy_jx_i^Tx_j$
+Comparing this with vector from it's clear that $Q$ must contains $y$ and $x$ terms.
+\\\\
+Now we define matrix $X$ as a matrix of data points with $NxK$ shape, where $K$ is a 
+number of data dimensions and $i-th$ row contains $i-th$ data point.\\
+We also define matrix $Y$ with $KxN$ shape where each row is the same $y$ vector of data point class,
+so that $i,j$ element of $Y$ contains class of $j-th$ data point.
+\\\\
+Now following is true:
+\begin{equation}
+    (Y^T \odot X)(Y^T \odot X)^T = \sum_i^N\sum_j^Ny_iy_jx_i^Tx_j
+\end{equation}
+Using above and also incorporating $-$ sign from elementwise equation we can deduce
+that matrix $Q$ can by computed by following operation:
+\begin{equation}
+    Q = - (Y^T \odot X)(Y^T \odot X)^T
+\end{equation}
+\subsection{Negative semi-definiteness proof}
+Matrix is negative semi-definite iff $z^TQz \leq 0$. Using matrix Q form from above
+we cen rewrite this inequality as follows:
+\begin{equation}
+    - z^T(Y^T \odot X)(Y^T \odot X)^Tz \leq 0 
+\end{equation}
+Because we multiply quadratic terms in vector notation with $-$ sign at the beginning 
+above is always true, thus $Q$ is negative semi-definite.
+\subsection{Negative semi-definiteness consequences}
+In SVN dual optimization we try to maximize $g(\alpha)$. Maximization is much
+more efficient when function is concave (i.e. Have only one (global) maximum). 
+Thanks to negative semi-definiteness we know that $g(\alpha)$ is concave and 
+maximization problem can be solved in polynomial time (in other case the problem is NP-hard).
 \end{document}

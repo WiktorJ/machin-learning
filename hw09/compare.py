@@ -1,6 +1,6 @@
 import os
 
-file1 = open('bonus_solution.txt', 'r')
+file1 = open('bonus_solution2.txt', 'r')
 file2 = open('bonus_solution2.txt', 'r')
 
 line_n = os.stat("bonus_solution2.txt").st_size

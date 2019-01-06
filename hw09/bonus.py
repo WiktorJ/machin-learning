@@ -11,8 +11,8 @@ train_labels = loader['train_labels']
 val_data = loader['val_data']
 val_labels = loader['val_labels']
 
-train_data = np.vstack((train_data, val_data))
-train_labels = np.vstack((train_labels, val_labels))
+# train_data = np.vstack((train_data, val_data))
+# train_labels = np.vstack((train_labels, val_labels))
 
 test_data = loader['test_data']
 
@@ -75,17 +75,17 @@ class FeedForwardNet:
         initial = tf.constant(0.1, shape=shape)
         return tf.Variable(initial)
 
-    def conv2d(self, x, W):
-        return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
+    def conv1d(self, x, W):
+        return tf.nn.conv1d(x, W, strides=1, padding='SAME')
 
     def max_pool_2x2(self, x):
-        return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
-                              strides=[1, 2, 2, 1], padding='SAME')
+        return tf.layers.max_pooling1d(x, ksize=2,
+                                       strides=1, padding='SAME')
 
     def conv_layer(self, input, shape):
         W = self.weight_variable(shape)
         b = self.bias_variable([shape[3]])
-        return tf.nn.relu(self.conv2d(input, W) + b)
+        return tf.nn.relu(self.conv1d(input, W) + b)
 
     def build2(self, data_dim, num_classes, batch_norm):
         """ Construct the model.
@@ -153,28 +153,32 @@ class FeedForwardNet:
 
         with tf.variable_scope(self.name):
             hidden = self.X
-
+            hidden = \
+                tf.layers.dropout(
+                    tf.layers.max_pooling1d(
+                        tf.layers.batch_normalization(
+                            tf.layers.conv1d(tf.reshape(hidden, shape=[-1, 20, 6]), filters=18, kernel_size=2,
+                                             strides=1, padding='same')), 2, 1), 0.5)
+            hidden = \
+                tf.layers.dropout(
+                    tf.layers.max_pooling1d(
+                        tf.layers.batch_normalization(
+                            tf.layers.conv1d(hidden, filters=36, kernel_size=2,
+                                         strides=1, padding='same')), 2, 1), 0.5)
+            hidden = \
+                tf.layers.dropout(
+                    tf.layers.max_pooling1d(
+                        tf.layers.batch_normalization(
+                            tf.layers.conv1d(hidden, filters=72, kernel_size=2,
+                                         strides=1, padding='same')), 2, 1), 0.5)
+            hidden = \
+                tf.layers.dropout(
+                    tf.layers.max_pooling1d(
+                        tf.layers.batch_normalization(
+                            tf.layers.conv1d(hidden, filters=144, kernel_size=2,
+                                         strides=1, padding='same')), 2, 1), 0.5)
+            hidden = tf.reshape(hidden, [-1, 2304])
             for ix, hidden_size in enumerate(self.hidden_sizes):
-                hidden = \
-                    tf.layers.dropout(
-                        tf.layers.max_pooling1d(
-                            tf.layers.batch_normalization(
-                                tf.nn.conv1d(hidden, 512.0, 1, 'SAME')), 2, 1), 0.15)
-                hidden = \
-                    tf.layers.dropout(
-                        tf.layers.max_pooling1d(
-                            tf.layers.batch_normalization(
-                                tf.nn.conv1d(hidden, 64.0, 1, 'SAME')), 2, 1), 0.15)
-
-                lstm_cell = tf.contrib.rnn.BasicLSTMCell(128, forget_bias=1.0)
-
-                hidden = \
-                    tf.layers.dropout(
-                        tf.nn.dynamic_rnn(lstm_cell,
-                                          tf.layers.max_pooling1d(
-                                              tf.layers.batch_normalization(
-                                                  tf.nn.conv1d(hidden, 32.0, 1, 'SAME')), 2, 1), dtype=tf.float32), 0.15)
-
                 w = tf.Variable(tf.random_normal([hidden.get_shape()[1].value, hidden_size]))
                 b = tf.Variable(tf.random_normal([hidden_size]))
                 self.weights.append(w)
@@ -238,14 +242,14 @@ class FeedForwardNet:
             tr_loss, tr_acc = session.run([self.loss, self.accuracy],
                                           feed_dict={self.X: train_data, self.Y: train_labels})
 
-            # val_loss, val_acc = session.run([self.loss, self.accuracy],
-            #                                 feed_dict={self.X: val_data, self.Y: val_labels})
+            val_loss, val_acc = session.run([self.loss, self.accuracy],
+                                            feed_dict={self.X: val_data, self.Y: val_labels})
 
             train_losses.append(tr_loss)
             train_accs.append(tr_acc)
 
-            # val_losses.append(val_loss)
-            # val_accs.append(val_acc)
+            val_losses.append(val_loss)
+            val_accs.append(val_acc)
 
             for epoch in range(epochs):
                 if (epoch + 1) % 25 == 0:
@@ -259,14 +263,14 @@ class FeedForwardNet:
                 tr_loss, tr_acc = session.run([self.loss, self.accuracy],
                                               feed_dict={self.X: train_data, self.Y: train_labels})
 
-                # val_loss, val_acc = session.run([self.loss, self.accuracy],
-                #                                 feed_dict={self.X: val_data, self.Y: val_labels})
+                val_loss, val_acc = session.run([self.loss, self.accuracy],
+                                                feed_dict={self.X: val_data, self.Y: val_labels})
 
                 train_losses.append(tr_loss)
                 train_accs.append(tr_acc)
 
-                # val_losses.append(val_loss)
-                # val_accs.append(val_acc)
+                val_losses.append(val_loss)
+                val_accs.append(val_acc)
 
         self.hist = {'train_loss': np.array(train_losses),
                      'train_accuracy': np.array(train_accs),
@@ -286,8 +290,8 @@ layers = [
     # ([50, 50, 50, 50, 50], [tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu]),
     # ([50, 50, 50, 50, 50, 50], [tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu]),
     # ([200, 200], [tf.nn.relu, tf.nn.relu]),
-    # ([400, 400], [tf.nn.relu, tf.nn.relu]),
-    # ([200, 200, 200], [tf.nn.relu, tf.nn.relu, tf.nn.relu]),
+    ([400, 400], [tf.nn.relu, tf.nn.relu]),
+    # ([200, 200], [tf.nn.relu, tf.nn.relu, tf.nn.relu]),
     # ([400, 400, 400], [tf.nn.relu, tf.nn.relu,tf.nn.relu]),
     # ([200, 200, 200, 200], [tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu]),
     # ([500, 500, 500, 500], [tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu]),
@@ -295,7 +299,7 @@ layers = [
     # ([700, 700, 700, 700], [tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu]),
     # ([500, 400, 300, 200], [tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu]),
     # ([400, 400, 400, 400], [tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu]),
-    ([600, 600, 600, 600, 600], [tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu]),
+    # ([600, 600, 600, 600, 600], [tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu]),
     # ([200, 200, 200, 200, 200], [tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu]),
     # ([300, 300, 300, 300, 300], [tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu]),
     # ([350, 350, 350, 350, 350, 350], [tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu]),
@@ -311,7 +315,7 @@ batch_size = 512
 
 batch_norm = [True]
 dropouts = [0.5]
-l2 = [1e-07]
+l2 = [0.0001]
 
 # dropouts = [0, 0.5]
 # l2 = [5e-5, 1e-5, 5e-6, 1e-6, 5e-7, 1e-7]
@@ -334,25 +338,25 @@ for d in dropouts:
                             batch_size=batch_size, dropout=d)
 
                 train_acc = model.hist['train_accuracy'][-1]
-                # val_acc = model.hist['val_accuracy'][-1]
+                val_acc = model.hist['val_accuracy'][-1]
                 res.append({
                     "dropout": d,
                     "l2": l,
                     "bn": bn,
                     "sizes": layer[0],
                     "train_acc": train_acc,
-                    # "val_acc": val_acc
+                    "val_acc": val_acc
                 })
                 print(f"Dropout: {d}, l2: {l}, Batch norm: {bn}, Sizes: {layer[0]}")
                 print(f"Training accuracy: {train_acc:.3f}")
-                # print(f"Validation accuracy: {val_acc:.3f}")
+                print(f"Validation accuracy: {val_acc:.3f}")
                 print("-----------------------")
 
-                test_preds = model.logits.eval({model.X: test_data},
-                                               session=model.session).argmax(1)
+                # test_preds = model.logits.eval({model.X: test_data},
+                #                                session=model.session).argmax(1)
+                #
+                # np.savetxt("bonus_solution2.txt", test_preds, fmt='%i')
 
-                np.savetxt("bonus_solution2.txt", test_preds, fmt='%i')
-
-# res = sorted(res, key=lambda k: k['val_acc'], reverse=True)
+res = sorted(res, key=lambda k: k['val_acc'], reverse=True)
 print("SORTED RES")
 print(res, sep="\n")

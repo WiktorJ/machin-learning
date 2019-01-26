@@ -1,0 +1,226 @@
+
+    
+    \hypertarget{programming-assignment-10-dimensionality-reduction}{%
+\section{Programming assignment 10: Dimensionality
+Reduction}\label{programming-assignment-10-dimensionality-reduction}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor} }]:} \PY{k+kn}{import} \PY{n+nn}{numpy} \PY{k}{as} \PY{n+nn}{np}
+        \PY{k+kn}{import} \PY{n+nn}{matplotlib}\PY{n+nn}{.}\PY{n+nn}{pyplot} \PY{k}{as} \PY{n+nn}{plt}
+        
+        \PY{o}{\PYZpc{}}\PY{k}{matplotlib} inline
+\end{Verbatim}
+
+    \hypertarget{exporting-the-results-to-pdf}{%
+\subsection{Exporting the results to
+PDF}\label{exporting-the-results-to-pdf}}
+
+Once you complete the assignments, export the entire notebook as PDF and
+attach it to your homework solutions. The best way of doing that is 1.
+Run all the cells of the notebook. 2. Download the notebook in HTML
+(click File \textgreater{} Download as \textgreater{} .html) 3. Convert
+the HTML to PDF using e.g.~https://www.sejda.com/html-to-pdf or
+\texttt{wkhtmltopdf} for Linux
+(\href{https://www.cyberciti.biz/open-source/html-to-pdf-freeware-linux-osx-windows-software/}{tutorial})
+4. Concatenate your solutions for other tasks with the output of Step 3.
+On a Linux machine you can simply use \texttt{pdfunite}, there are
+similar tools for other platforms too. You can only upload a single PDF
+file to Moodle.
+
+This way is preferred to using \texttt{nbconvert}, since
+\texttt{nbconvert} clips lines that exceed page width and makes your
+code harder to grade.
+
+    \hypertarget{pca-task}{%
+\subsection{PCA Task}\label{pca-task}}
+
+    Given the data in the matrix X your tasks is to: * Calculate the
+covariance matrix \(\Sigma\). * Calculate eigenvalues and eigenvectors
+of \(\Sigma\). * Plot the original data \(X\) and the eigenvectors to a
+single diagram. What do you observe? Which eigenvector corresponds to
+the smallest eigenvalue? * Determine the smallest eigenvalue and remove
+its corresponding eigenvector. The remaining eigenvector is the basis of
+a new subspace. * Transform all vectors in X in this new subspace by
+expressing all vectors in X in this new basis.
+
+    \hypertarget{the-given-data-x}{%
+\subsubsection{The given data X}\label{the-given-data-x}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}5}]:} \PY{n}{X} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{p}{[}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{3}\PY{p}{,}\PY{o}{\PYZhy{}}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{2}\PY{p}{,}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{)}\PY{p}{,}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{,}\PY{l+m+mi}{0}\PY{p}{)}\PY{p}{,}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,}\PY{l+m+mi}{1}\PY{p}{)}\PY{p}{,}
+                      \PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{,}\PY{l+m+mi}{3}\PY{p}{)}\PY{p}{,}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{2}\PY{p}{,}\PY{o}{\PYZhy{}}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{,}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{)}\PY{p}{,}
+                      \PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,}\PY{l+m+mi}{0}\PY{p}{)}\PY{p}{,}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,}\PY{l+m+mi}{1}\PY{p}{)}\PY{p}{,}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{,}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,} \PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{2}\PY{p}{,}\PY{o}{\PYZhy{}}\PY{l+m+mi}{3}\PY{p}{)}\PY{p}{,}
+                      \PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{,}\PY{o}{\PYZhy{}}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{,}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{)}\PY{p}{,}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,}\PY{l+m+mi}{0}\PY{p}{)}\PY{p}{,} \PY{p}{(}\PY{l+m+mi}{2}\PY{p}{,}\PY{l+m+mi}{1}\PY{p}{)}\PY{p}{,}\PY{p}{(}\PY{l+m+mi}{3}\PY{p}{,}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{]}\PY{p}{)}
+\end{Verbatim}
+
+    \hypertarget{task-1-calculate-the-covariance-matrix-sigma}{%
+\subsubsection{\texorpdfstring{Task 1: Calculate the covariance matrix
+\(\Sigma\)}{Task 1: Calculate the covariance matrix \textbackslash{}Sigma}}\label{task-1-calculate-the-covariance-matrix-sigma}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}20}]:} \PY{k}{def} \PY{n+nf}{get\PYZus{}covariance}\PY{p}{(}\PY{n}{X}\PY{p}{)}\PY{p}{:}
+             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Calculates the covariance matrix of the input data.}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    Parameters}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    X : array, shape [N, D]}
+         \PY{l+s+sd}{        Data matrix.}
+         \PY{l+s+sd}{        }
+         \PY{l+s+sd}{    Returns}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    Sigma : array, shape [D, D]}
+         \PY{l+s+sd}{        Covariance matrix}
+         \PY{l+s+sd}{        }
+         \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+             \PY{k}{return} \PY{n}{np}\PY{o}{.}\PY{n}{cov}\PY{p}{(}\PY{n}{X}\PY{p}{,} \PY{n}{rowvar}\PY{o}{=}\PY{k+kc}{False}\PY{p}{)}
+\end{Verbatim}
+
+    \hypertarget{task-2-calculate-eigenvalues-and-eigenvectors-of-sigma.}{%
+\subsubsection{\texorpdfstring{Task 2: Calculate eigenvalues and
+eigenvectors of
+\(\Sigma\).}{Task 2: Calculate eigenvalues and eigenvectors of \textbackslash{}Sigma.}}\label{task-2-calculate-eigenvalues-and-eigenvectors-of-sigma.}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}3}]:} \PY{k}{def} \PY{n+nf}{get\PYZus{}eigen}\PY{p}{(}\PY{n}{S}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Calculates the eigenvalues and eigenvectors of the input matrix.}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    Parameters}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    S : array, shape [D, D]}
+        \PY{l+s+sd}{        Square symmetric positive definite matrix.}
+        \PY{l+s+sd}{        }
+        \PY{l+s+sd}{    Returns}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    L : array, shape [D]}
+        \PY{l+s+sd}{        Eigenvalues of S}
+        \PY{l+s+sd}{    U : array, shape [D, D]}
+        \PY{l+s+sd}{        Eigenvectors of S}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+            \PY{k}{return} \PY{n}{np}\PY{o}{.}\PY{n}{linalg}\PY{o}{.}\PY{n}{eig}\PY{p}{(}\PY{n}{S}\PY{p}{)}
+\end{Verbatim}
+
+    \hypertarget{task-3-plot-the-original-data-x-and-the-eigenvectors-to-a-single-diagram.}{%
+\subsubsection{Task 3: Plot the original data X and the eigenvectors to
+a single
+diagram.}\label{task-3-plot-the-original-data-x-and-the-eigenvectors-to-a-single-diagram.}}
+
+Note that, in general if \(u_i\) is an eigenvector of the matrix \(M\)
+with eigenvalue \(\lambda_i\) then \(\alpha \cdot u_i\) is also an
+eigenvector of \(M\) with the same eigenvalue \(\lambda_i\), where
+\(\alpha\) is an arbitrary scalar (including \(\alpha=-1\)).
+
+Thus, the signs of the eigenvectors are arbitrary, and you can flip them
+without changing the meaning of the result. Only their direction
+matters. The particular result depends on the algorithm used to find
+them.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}24}]:} \PY{c+c1}{\PYZsh{} plot the original data}
+         \PY{n}{plt}\PY{o}{.}\PY{n}{scatter}\PY{p}{(}\PY{n}{X}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{X}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{)}
+         
+         \PY{c+c1}{\PYZsh{} plot the mean of the data}
+         \PY{n}{mean\PYZus{}d1}\PY{p}{,} \PY{n}{mean\PYZus{}d2} \PY{o}{=} \PY{n}{X}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{)}
+         \PY{n}{plt}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{mean\PYZus{}d1}\PY{p}{,} \PY{n}{mean\PYZus{}d2}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{o}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{markersize}\PY{o}{=}\PY{l+m+mi}{10}\PY{p}{,} \PY{n}{color}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{red}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{alpha}\PY{o}{=}\PY{l+m+mf}{0.5}\PY{p}{)}
+         \PY{c+c1}{\PYZsh{} calculate the covariance matrix}
+         \PY{n}{Sigma} \PY{o}{=} \PY{n}{get\PYZus{}covariance}\PY{p}{(}\PY{n}{X}\PY{p}{)}
+         \PY{c+c1}{\PYZsh{} calculate the eigenvector and eigenvalues of Sigma}
+         \PY{n}{L}\PY{p}{,} \PY{n}{U} \PY{o}{=} \PY{n}{get\PYZus{}eigen}\PY{p}{(}\PY{n}{Sigma}\PY{p}{)}
+         \PY{n}{plt}\PY{o}{.}\PY{n}{arrow}\PY{p}{(}\PY{n}{mean\PYZus{}d1}\PY{p}{,} \PY{n}{mean\PYZus{}d2}\PY{p}{,} \PY{n}{U}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{U}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{width}\PY{o}{=}\PY{l+m+mf}{0.01}\PY{p}{,} \PY{n}{color}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{red}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{alpha}\PY{o}{=}\PY{l+m+mf}{0.5}\PY{p}{)}
+         \PY{n}{plt}\PY{o}{.}\PY{n}{arrow}\PY{p}{(}\PY{n}{mean\PYZus{}d1}\PY{p}{,} \PY{n}{mean\PYZus{}d2}\PY{p}{,} \PY{n}{U}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{n}{U}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{n}{width}\PY{o}{=}\PY{l+m+mf}{0.01}\PY{p}{,} \PY{n}{color}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{green}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{alpha}\PY{o}{=}\PY{l+m+mf}{0.5}\PY{p}{)}\PY{p}{;}
+\end{Verbatim}
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{output_12_0.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    What do you observe in the above plot? Which eigenvector corresponds to
+the smallest eigenvalue?
+
+Write your answer here:
+
+Green vector corresponds to smaller eigenvalue as it points to the
+direction of lower variance.
+
+    \hypertarget{task-4-transform-the-data}{%
+\subsubsection{Task 4: Transform the
+data}\label{task-4-transform-the-data}}
+
+    Determine the smallest eigenvalue and remove its corresponding
+eigenvector. The remaining eigenvector is the basis of a new subspace.
+Transform all vectors in X in this new subspace by expressing all
+vectors in X in this new basis.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}25}]:} \PY{k}{def} \PY{n+nf}{transform}\PY{p}{(}\PY{n}{X}\PY{p}{,} \PY{n}{U}\PY{p}{,} \PY{n}{L}\PY{p}{)}\PY{p}{:}
+             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Transforms the data in the new subspace spanned by the eigenvector corresponding to the largest eigenvalue.}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    Parameters}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    X : array, shape [N, D]}
+         \PY{l+s+sd}{        Data matrix.}
+         \PY{l+s+sd}{    L : array, shape [D]}
+         \PY{l+s+sd}{        Eigenvalues of Sigma\PYZus{}X}
+         \PY{l+s+sd}{    U : array, shape [D, D]}
+         \PY{l+s+sd}{        Eigenvectors of Sigma\PYZus{}X}
+         \PY{l+s+sd}{        }
+         \PY{l+s+sd}{    Returns}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    X\PYZus{}t : array, shape [N, 1]}
+         \PY{l+s+sd}{        Transformed data}
+         \PY{l+s+sd}{        }
+         \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+             \PY{n}{largest\PYZus{}index} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{argmax}\PY{p}{(}\PY{n}{L}\PY{p}{)}
+             \PY{n}{largest\PYZus{}eigenvector} \PY{o}{=} \PY{n}{U}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{n}{largest\PYZus{}index}\PY{p}{]}
+             \PY{k}{return} \PY{n}{X}\PY{n+nd}{@largest\PYZus{}eigenvector}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}37}]:} \PY{n}{X\PYZus{}t} \PY{o}{=} \PY{n}{transform}\PY{p}{(}\PY{n}{X}\PY{p}{,} \PY{n}{U}\PY{p}{,} \PY{n}{L}\PY{p}{)}
+\end{Verbatim}
+
+    \hypertarget{task-svd}{%
+\subsection{Task SVD}\label{task-svd}}
+
+    \hypertarget{task-5-given-the-matrix-m-find-its-svd-decomposition-m-u-cdot-sigma-cdot-v-and-reduce-it-to-one-dimension-using-the-approach-described-in-the-lecture.}{%
+\subsubsection{\texorpdfstring{Task 5: Given the matrix \(M\) find its
+SVD decomposition \(M= U \cdot \Sigma \cdot V\) and reduce it to one
+dimension using the approach described in the
+lecture.}{Task 5: Given the matrix M find its SVD decomposition M= U \textbackslash{}cdot \textbackslash{}Sigma \textbackslash{}cdot V and reduce it to one dimension using the approach described in the lecture.}}\label{task-5-given-the-matrix-m-find-its-svd-decomposition-m-u-cdot-sigma-cdot-v-and-reduce-it-to-one-dimension-using-the-approach-described-in-the-lecture.}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}36}]:} \PY{n}{M} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{p}{[}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{]}\PY{p}{,} \PY{p}{[}\PY{l+m+mi}{6}\PY{p}{,} \PY{l+m+mi}{3}\PY{p}{]}\PY{p}{,}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{]}\PY{p}{]}\PY{p}{)}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}63}]:} \PY{k}{def} \PY{n+nf}{reduce\PYZus{}to\PYZus{}one\PYZus{}dimension}\PY{p}{(}\PY{n}{M}\PY{p}{)}\PY{p}{:}
+             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Reduces the input matrix to one dimension using its SVD decomposition.}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    Parameters}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    M : array, shape [N, D]}
+         \PY{l+s+sd}{        Input matrix.}
+         \PY{l+s+sd}{        }
+         \PY{l+s+sd}{    Returns}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    M\PYZus{}t: array, shape [N, 1]}
+         \PY{l+s+sd}{        Reduce matrix.}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+             \PY{n}{U}\PY{p}{,}\PY{n}{S}\PY{p}{,}\PY{n}{V} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{linalg}\PY{o}{.}\PY{n}{svd}\PY{p}{(}\PY{n}{M}\PY{p}{,}\PY{n}{full\PYZus{}matrices}\PY{o}{=}\PY{k+kc}{False}\PY{p}{)}
+             \PY{k}{return} \PY{n}{M}\PY{o}{*}\PY{n}{V}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{,}\PY{p}{:}\PY{p}{]}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}65}]:} \PY{n}{M\PYZus{}t} \PY{o}{=} \PY{n}{reduce\PYZus{}to\PYZus{}one\PYZus{}dimension}\PY{p}{(}\PY{n}{M}\PY{p}{)}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor} }]:} 
+\end{Verbatim}
+
+
+    % Add a bibliography block to the postdoc
+    
+    

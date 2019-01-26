@@ -1,0 +1,502 @@
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}1}]:} \PY{k+kn}{import} \PY{n+nn}{time}
+        \PY{k+kn}{import} \PY{n+nn}{scipy}\PY{n+nn}{.}\PY{n+nn}{sparse} \PY{k}{as} \PY{n+nn}{sp}
+        \PY{k+kn}{import} \PY{n+nn}{numpy} \PY{k}{as} \PY{n+nn}{np}
+        \PY{k+kn}{from} \PY{n+nn}{scipy}\PY{n+nn}{.}\PY{n+nn}{sparse}\PY{n+nn}{.}\PY{n+nn}{linalg} \PY{k}{import} \PY{n}{svds}
+        \PY{k+kn}{from} \PY{n+nn}{sklearn}\PY{n+nn}{.}\PY{n+nn}{linear\PYZus{}model} \PY{k}{import} \PY{n}{Ridge}
+        
+        \PY{k+kn}{import} \PY{n+nn}{matplotlib}\PY{n+nn}{.}\PY{n+nn}{pyplot} \PY{k}{as} \PY{n+nn}{plt}
+        \PY{o}{\PYZpc{}}\PY{k}{matplotlib} inline
+\end{Verbatim}
+
+    \hypertarget{exporting-the-results-to-pdf}{%
+\subsection{Exporting the results to
+PDF}\label{exporting-the-results-to-pdf}}
+
+Once you complete the assignments, export the entire notebook as PDF and
+attach it to your homework solutions. The best way of doing that is 1.
+Run all the cells of the notebook. 2. Download the notebook in HTML
+(click File \textgreater{} Download as \textgreater{} .html) 3. Convert
+the HTML to PDF using e.g.~https://www.sejda.com/html-to-pdf or
+\texttt{wkhtmltopdf} for Linux
+(\href{https://www.cyberciti.biz/open-source/html-to-pdf-freeware-linux-osx-windows-software/}{tutorial})
+4. Concatenate your solutions for other tasks with the output of Step 3.
+On a Linux machine you can simply use \texttt{pdfunite}, there are
+similar tools for other platforms too. You can only upload a single PDF
+file to Moodle.
+
+This way is preferred to using \texttt{nbconvert}, since
+\texttt{nbconvert} clips lines that exceed page width and makes your
+code harder to grade.
+
+    \hypertarget{restaurant-recommendation}{%
+\subsection{Restaurant recommendation}\label{restaurant-recommendation}}
+
+The goal of this task is to recommend restaurants to users based on the
+rating data in the Yelp dataset. For this, we try to predict the rating
+a user will give to a restaurant they have not yet rated based on a
+latent factor model.
+
+Specifically, the objective function (loss) we wanted to optimize is: \[
+\mathcal{L} = \min_{P, Q} \sum_{(i, x) \in W} (M_{ix} - \mathbf{q}_i^T\mathbf{p}_x)^2 + \lambda\sum_x{\left\lVert \mathbf{p}_x  \right\rVert}^2 + \lambda\sum_i {\left\lVert\mathbf{q}_i  \right\rVert}^2
+\]
+
+where \(W\) is the set of \((i, x)\) pairs for which the rating
+\(M_{ix}\) given by user \(i\) to restaurant \(x\) is known. Here we
+have also introduced two regularization terms to help us with
+overfitting where \(\lambda\) is hyper-parameter that control the
+strength of the regularization.
+
+\textbf{Hint 1}: Using the closed form solution for regression might
+lead to singular values. To avoid this issue perform the regression step
+with an existing package such as scikit-learn. It is advisable to use
+ridge regression to account for regularization.
+
+\textbf{Hint 2}: If you are using the scikit-learn package remember to
+set \texttt{fit\ intercept\ =\ False} to only learn the coeficients of
+the linear regression.
+
+    \hypertarget{load-and-preprocess-the-data-nothing-to-do-here}{%
+\subsubsection{Load and Preprocess the Data (nothing to do
+here)}\label{load-and-preprocess-the-data-nothing-to-do-here}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}2}]:} \PY{n}{ratings} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{load}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{ratings.npy}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}3}]:} \PY{c+c1}{\PYZsh{} We have triplets of (user, restaurant, rating).}
+        \PY{n}{ratings}
+\end{Verbatim}
+
+\begin{Verbatim}[commandchars=\\\{\}]
+{\color{outcolor}Out[{\color{outcolor}3}]:} array([[101968,   1880,      1],
+               [101968,    284,      5],
+               [101968,   1378,      2],
+               {\ldots},
+               [ 72452,   2100,      4],
+               [ 72452,   2050,      5],
+               [ 74861,   3979,      5]])
+\end{Verbatim}
+            
+    Now we transform the data into a matrix of dimension {[}N, D{]}, where N
+is the number of users and D is the number of restaurants in the
+dataset. We store the data as a sparse matrix to avoid out-of-memory
+issues.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}4}]:} \PY{n}{n\PYZus{}users} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{max}\PY{p}{(}\PY{n}{ratings}\PY{p}{[}\PY{p}{:}\PY{p}{,}\PY{l+m+mi}{0}\PY{p}{]} \PY{o}{+} \PY{l+m+mi}{1}\PY{p}{)}
+        \PY{n}{n\PYZus{}restaurants} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{max}\PY{p}{(}\PY{n}{ratings}\PY{p}{[}\PY{p}{:}\PY{p}{,}\PY{l+m+mi}{1}\PY{p}{]} \PY{o}{+} \PY{l+m+mi}{1}\PY{p}{)}
+        \PY{n}{M} \PY{o}{=} \PY{n}{sp}\PY{o}{.}\PY{n}{coo\PYZus{}matrix}\PY{p}{(}\PY{p}{(}\PY{n}{ratings}\PY{p}{[}\PY{p}{:}\PY{p}{,}\PY{l+m+mi}{2}\PY{p}{]}\PY{p}{,} \PY{p}{(}\PY{n}{ratings}\PY{p}{[}\PY{p}{:}\PY{p}{,}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{ratings}\PY{p}{[}\PY{p}{:}\PY{p}{,}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{)}\PY{p}{)}\PY{p}{,} \PY{n}{shape}\PY{o}{=}\PY{p}{(}\PY{n}{n\PYZus{}users}\PY{p}{,} \PY{n}{n\PYZus{}restaurants}\PY{p}{)}\PY{p}{)}\PY{o}{.}\PY{n}{tocsr}\PY{p}{(}\PY{p}{)}
+        \PY{n}{M}
+\end{Verbatim}
+
+\begin{Verbatim}[commandchars=\\\{\}]
+{\color{outcolor}Out[{\color{outcolor}4}]:} <337867x5899 sparse matrix of type '<class 'numpy.int64'>'
+        	with 929606 stored elements in Compressed Sparse Row format>
+\end{Verbatim}
+            
+    To avoid the cold start problem, in the preprocessing step, we
+recursively remove all users and restaurants with 10 or less ratings.
+
+Then, we randomly select 200 data points for the validation and test
+sets, respectively.
+
+After this, we subtract the mean rating for each users to account for
+this global effect.
+
+\textbf{Note}: Some entries might become zero in this process -- but
+these entries are different than the `unknown' zeros in the matrix. We
+store the indices for which we the rating data available in a separate
+variable.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}5}]:} \PY{k}{def} \PY{n+nf}{cold\PYZus{}start\PYZus{}preprocessing}\PY{p}{(}\PY{n}{matrix}\PY{p}{,} \PY{n}{min\PYZus{}entries}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}}
+        \PY{l+s+sd}{    Recursively removes rows and columns from the input matrix which have less than min\PYZus{}entries nonzero entries.}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    Parameters}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    matrix      : sp.spmatrix, shape [N, D]}
+        \PY{l+s+sd}{                  The input matrix to be preprocessed.}
+        \PY{l+s+sd}{    min\PYZus{}entries : int}
+        \PY{l+s+sd}{                  Minimum number of nonzero elements per row and column.}
+        
+        \PY{l+s+sd}{    Returns}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    matrix      : sp.spmatrix, shape [N\PYZsq{}, D\PYZsq{}]}
+        \PY{l+s+sd}{                  The pre\PYZhy{}processed matrix, where N\PYZsq{} \PYZlt{}= N and D\PYZsq{} \PYZlt{}= D}
+        \PY{l+s+sd}{        }
+        \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+            \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Shape before: }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{\PYZdq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{matrix}\PY{o}{.}\PY{n}{shape}\PY{p}{)}\PY{p}{)}
+            
+            \PY{n}{shape} \PY{o}{=} \PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{,} \PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{)}
+            \PY{k}{while} \PY{n}{matrix}\PY{o}{.}\PY{n}{shape} \PY{o}{!=} \PY{n}{shape}\PY{p}{:}
+                \PY{n}{shape} \PY{o}{=} \PY{n}{matrix}\PY{o}{.}\PY{n}{shape}
+                \PY{n}{nnz} \PY{o}{=} \PY{n}{matrix}\PY{o}{\PYZgt{}}\PY{l+m+mi}{0}
+                \PY{n}{row\PYZus{}ixs} \PY{o}{=} \PY{n}{nnz}\PY{o}{.}\PY{n}{sum}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)}\PY{o}{.}\PY{n}{A1} \PY{o}{\PYZgt{}} \PY{n}{min\PYZus{}entries}
+                \PY{n}{matrix} \PY{o}{=} \PY{n}{matrix}\PY{p}{[}\PY{n}{row\PYZus{}ixs}\PY{p}{]}
+                \PY{n}{nnz} \PY{o}{=} \PY{n}{matrix}\PY{o}{\PYZgt{}}\PY{l+m+mi}{0}
+                \PY{n}{col\PYZus{}ixs} \PY{o}{=} \PY{n}{nnz}\PY{o}{.}\PY{n}{sum}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{)}\PY{o}{.}\PY{n}{A1} \PY{o}{\PYZgt{}} \PY{n}{min\PYZus{}entries}
+                \PY{n}{matrix} \PY{o}{=} \PY{n}{matrix}\PY{p}{[}\PY{p}{:}\PY{p}{,}\PY{n}{col\PYZus{}ixs}\PY{p}{]}
+            \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Shape after: }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{\PYZdq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{matrix}\PY{o}{.}\PY{n}{shape}\PY{p}{)}\PY{p}{)}
+            \PY{n}{nnz} \PY{o}{=} \PY{n}{matrix}\PY{o}{\PYZgt{}}\PY{l+m+mi}{0}
+            \PY{k}{assert} \PY{p}{(}\PY{n}{nnz}\PY{o}{.}\PY{n}{sum}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{)}\PY{o}{.}\PY{n}{A1} \PY{o}{\PYZgt{}} \PY{n}{min\PYZus{}entries}\PY{p}{)}\PY{o}{.}\PY{n}{all}\PY{p}{(}\PY{p}{)}
+            \PY{k}{assert} \PY{p}{(}\PY{n}{nnz}\PY{o}{.}\PY{n}{sum}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)}\PY{o}{.}\PY{n}{A1} \PY{o}{\PYZgt{}} \PY{n}{min\PYZus{}entries}\PY{p}{)}\PY{o}{.}\PY{n}{all}\PY{p}{(}\PY{p}{)}
+            \PY{k}{return} \PY{n}{matrix}
+\end{Verbatim}
+
+    \hypertarget{task-1-implement-a-function-that-substracts-the-mean-user-rating-from-the-sparse-rating-matrix}{%
+\subsubsection{Task 1: Implement a function that substracts the mean
+user rating from the sparse rating
+matrix}\label{task-1-implement-a-function-that-substracts-the-mean-user-rating-from-the-sparse-rating-matrix}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}6}]:} \PY{k}{def} \PY{n+nf}{shift\PYZus{}user\PYZus{}mean}\PY{p}{(}\PY{n}{matrix}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}}
+        \PY{l+s+sd}{    Subtract the mean rating per user from the non\PYZhy{}zero elements in the input matrix.}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    Parameters}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    matrix : sp.spmatrix, shape [N, D]}
+        \PY{l+s+sd}{             Input sparse matrix.}
+        \PY{l+s+sd}{    Returns}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    matrix : sp.spmatrix, shape [N, D]}
+        \PY{l+s+sd}{             The modified input matrix.}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    user\PYZus{}means : np.array, shape [N, 1]}
+        \PY{l+s+sd}{                 The mean rating per user that can be used to recover the absolute ratings from the mean\PYZhy{}shifted ones.}
+        
+        \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+              
+            \PY{c+c1}{\PYZsh{} YOUR CODE HERE}
+            \PY{n}{user\PYZus{}means} \PY{o}{=} \PY{n}{matrix}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)}
+            \PY{n}{matrix} \PY{o}{=} \PY{n}{matrix} \PY{o}{\PYZhy{}} \PY{n}{user\PYZus{}means}
+            \PY{k}{assert} \PY{n}{np}\PY{o}{.}\PY{n}{all}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{isclose}\PY{p}{(}\PY{n}{matrix}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{)}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{)}\PY{p}{)}
+            \PY{k}{return} \PY{n}{matrix}\PY{p}{,} \PY{n}{user\PYZus{}means}
+\end{Verbatim}
+
+    \hypertarget{split-the-data-into-a-train-validation-and-test-set-nothing-to-do-here}{%
+\subsubsection{Split the data into a train, validation and test set
+(nothing to do
+here)}\label{split-the-data-into-a-train-validation-and-test-set-nothing-to-do-here}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}7}]:} \PY{k}{def} \PY{n+nf}{split\PYZus{}data}\PY{p}{(}\PY{n}{matrix}\PY{p}{,} \PY{n}{n\PYZus{}validation}\PY{p}{,} \PY{n}{n\PYZus{}test}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}}
+        \PY{l+s+sd}{    Extract validation and test entries from the input matrix. }
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    Parameters}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    matrix          : sp.spmatrix, shape [N, D]}
+        \PY{l+s+sd}{                      The input data matrix.}
+        \PY{l+s+sd}{    n\PYZus{}validation    : int}
+        \PY{l+s+sd}{                      The number of validation entries to extract.}
+        \PY{l+s+sd}{    n\PYZus{}test          : int}
+        \PY{l+s+sd}{                      The number of test entries to extract.}
+        
+        \PY{l+s+sd}{    Returns}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    matrix\PYZus{}split    : sp.spmatrix, shape [N, D]}
+        \PY{l+s+sd}{                      A copy of the input matrix in which the validation and test entries have been set to zero.}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    val\PYZus{}idx         : tuple, shape [2, n\PYZus{}validation]}
+        \PY{l+s+sd}{                      The indices of the validation entries.}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    test\PYZus{}idx        : tuple, shape [2, n\PYZus{}test]}
+        \PY{l+s+sd}{                      The indices of the test entries.}
+        \PY{l+s+sd}{    }
+        \PY{l+s+sd}{    val\PYZus{}values      : np.array, shape [n\PYZus{}validation, ]}
+        \PY{l+s+sd}{                      The values of the input matrix at the validation indices.}
+        \PY{l+s+sd}{                      }
+        \PY{l+s+sd}{    test\PYZus{}values     : np.array, shape [n\PYZus{}test, ]}
+        \PY{l+s+sd}{                      The values of the input matrix at the test indices.}
+        
+        \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+            
+            \PY{n}{matrix\PYZus{}cp} \PY{o}{=} \PY{n}{matrix}\PY{o}{.}\PY{n}{copy}\PY{p}{(}\PY{p}{)}
+            \PY{n}{non\PYZus{}zero\PYZus{}idx} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{argwhere}\PY{p}{(}\PY{n}{matrix\PYZus{}cp}\PY{p}{)}
+            \PY{n}{ixs} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{random}\PY{o}{.}\PY{n}{permutation}\PY{p}{(}\PY{n}{non\PYZus{}zero\PYZus{}idx}\PY{p}{)}
+            \PY{n}{val\PYZus{}idx} \PY{o}{=} \PY{n+nb}{tuple}\PY{p}{(}\PY{n}{ixs}\PY{p}{[}\PY{p}{:}\PY{n}{n\PYZus{}validation}\PY{p}{]}\PY{o}{.}\PY{n}{T}\PY{p}{)}
+            \PY{n}{test\PYZus{}idx} \PY{o}{=} \PY{n+nb}{tuple}\PY{p}{(}\PY{n}{ixs}\PY{p}{[}\PY{n}{n\PYZus{}validation}\PY{p}{:}\PY{n}{n\PYZus{}validation} \PY{o}{+} \PY{n}{n\PYZus{}test}\PY{p}{]}\PY{o}{.}\PY{n}{T}\PY{p}{)}
+            
+            \PY{n}{val\PYZus{}values} \PY{o}{=} \PY{n}{matrix\PYZus{}cp}\PY{p}{[}\PY{n}{val\PYZus{}idx}\PY{p}{]}\PY{o}{.}\PY{n}{A1}
+            \PY{n}{test\PYZus{}values} \PY{o}{=} \PY{n}{matrix\PYZus{}cp}\PY{p}{[}\PY{n}{test\PYZus{}idx}\PY{p}{]}\PY{o}{.}\PY{n}{A1}
+            
+            \PY{n}{matrix\PYZus{}cp}\PY{p}{[}\PY{n}{val\PYZus{}idx}\PY{p}{]} \PY{o}{=} \PY{n}{matrix\PYZus{}cp}\PY{p}{[}\PY{n}{test\PYZus{}idx}\PY{p}{]} \PY{o}{=} \PY{l+m+mi}{0}
+            \PY{n}{matrix\PYZus{}cp}\PY{o}{.}\PY{n}{eliminate\PYZus{}zeros}\PY{p}{(}\PY{p}{)}
+        
+            \PY{k}{return} \PY{n}{matrix\PYZus{}cp}\PY{p}{,} \PY{n}{val\PYZus{}idx}\PY{p}{,} \PY{n}{test\PYZus{}idx}\PY{p}{,} \PY{n}{val\PYZus{}values}\PY{p}{,} \PY{n}{test\PYZus{}values}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}8}]:} \PY{n}{M} \PY{o}{=} \PY{n}{cold\PYZus{}start\PYZus{}preprocessing}\PY{p}{(}\PY{n}{M}\PY{p}{,} \PY{l+m+mi}{20}\PY{p}{)}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+Shape before: (337867, 5899)
+Shape after: (3529, 2072)
+
+    \end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}9}]:} \PY{n}{n\PYZus{}validation} \PY{o}{=} \PY{l+m+mi}{200}
+        \PY{n}{n\PYZus{}test} \PY{o}{=} \PY{l+m+mi}{200}
+        \PY{c+c1}{\PYZsh{} Split data}
+        \PY{n}{M\PYZus{}train}\PY{p}{,} \PY{n}{val\PYZus{}idx}\PY{p}{,} \PY{n}{test\PYZus{}idx}\PY{p}{,} \PY{n}{val\PYZus{}values}\PY{p}{,} \PY{n}{test\PYZus{}values} \PY{o}{=} \PY{n}{split\PYZus{}data}\PY{p}{(}\PY{n}{M}\PY{p}{,} \PY{n}{n\PYZus{}validation}\PY{p}{,} \PY{n}{n\PYZus{}test}\PY{p}{)}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}10}]:} \PY{c+c1}{\PYZsh{} Remove user means.}
+         \PY{n}{nonzero\PYZus{}indices} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{argwhere}\PY{p}{(}\PY{n}{M\PYZus{}train}\PY{p}{)}
+         \PY{n}{M\PYZus{}shifted}\PY{p}{,} \PY{n}{user\PYZus{}means} \PY{o}{=} \PY{n}{shift\PYZus{}user\PYZus{}mean}\PY{p}{(}\PY{n}{M\PYZus{}train}\PY{p}{)}
+         \PY{c+c1}{\PYZsh{} Apply the same shift to the validation and test data.}
+         \PY{n}{val\PYZus{}values\PYZus{}shifted} \PY{o}{=} \PY{n}{val\PYZus{}values} \PY{o}{\PYZhy{}} \PY{n}{user\PYZus{}means}\PY{p}{[}\PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{n}{val\PYZus{}idx}\PY{p}{)}\PY{o}{.}\PY{n}{T}\PY{p}{[}\PY{p}{:}\PY{p}{,}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{]}\PY{o}{.}\PY{n}{A1}
+         \PY{n}{test\PYZus{}values\PYZus{}shifted} \PY{o}{=} \PY{n}{test\PYZus{}values} \PY{o}{\PYZhy{}} \PY{n}{user\PYZus{}means}\PY{p}{[}\PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{n}{test\PYZus{}idx}\PY{p}{)}\PY{o}{.}\PY{n}{T}\PY{p}{[}\PY{p}{:}\PY{p}{,}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{]}\PY{o}{.}\PY{n}{A1}
+\end{Verbatim}
+
+    \hypertarget{compute-the-loss-function-nothing-to-do-here}{%
+\subsubsection{Compute the loss function (nothing to do
+here)}\label{compute-the-loss-function-nothing-to-do-here}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}11}]:} \PY{k}{def} \PY{n+nf}{loss}\PY{p}{(}\PY{n}{values}\PY{p}{,} \PY{n}{ixs}\PY{p}{,} \PY{n}{Q}\PY{p}{,} \PY{n}{P}\PY{p}{,} \PY{n}{reg\PYZus{}lambda}\PY{p}{)}\PY{p}{:}
+             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}}
+         \PY{l+s+sd}{    Compute the loss of the latent factor model (at indices ixs).}
+         \PY{l+s+sd}{    Parameters}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    values : np.array, shape [n\PYZus{}ixs,]}
+         \PY{l+s+sd}{        The array with the ground\PYZhy{}truth values.}
+         \PY{l+s+sd}{    ixs : tuple, shape [2, n\PYZus{}ixs]}
+         \PY{l+s+sd}{        The indices at which we want to evaluate the loss (usually the nonzero indices of the unshifted data matrix).}
+         \PY{l+s+sd}{    Q : np.array, shape [N, k]}
+         \PY{l+s+sd}{        The matrix Q of a latent factor model.}
+         \PY{l+s+sd}{    P : np.array, shape [k, D]}
+         \PY{l+s+sd}{        The matrix P of a latent factor model.}
+         \PY{l+s+sd}{    reg\PYZus{}lambda : float}
+         \PY{l+s+sd}{        The regularization strength}
+         \PY{l+s+sd}{          }
+         \PY{l+s+sd}{    Returns}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    loss : float}
+         \PY{l+s+sd}{           The loss of the latent factor model.}
+         
+         \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+             \PY{n}{mean\PYZus{}sse\PYZus{}loss} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{sum}\PY{p}{(}\PY{p}{(}\PY{n}{values} \PY{o}{\PYZhy{}} \PY{n}{Q}\PY{o}{.}\PY{n}{dot}\PY{p}{(}\PY{n}{P}\PY{p}{)}\PY{p}{[}\PY{n}{ixs}\PY{p}{]}\PY{p}{)}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{2}\PY{p}{)}
+             \PY{n}{regularization\PYZus{}loss} \PY{o}{=}  \PY{n}{reg\PYZus{}lambda} \PY{o}{*} \PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{sum}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{linalg}\PY{o}{.}\PY{n}{norm}\PY{p}{(}\PY{n}{P}\PY{p}{,} \PY{n}{axis}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{)}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{2}\PY{p}{)} \PY{o}{+} \PY{n}{np}\PY{o}{.}\PY{n}{sum}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{linalg}\PY{o}{.}\PY{n}{norm}\PY{p}{(}\PY{n}{Q}\PY{p}{,} \PY{n}{axis}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{)} \PY{o}{*}\PY{o}{*} \PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}
+             
+             \PY{k}{return} \PY{n}{mean\PYZus{}sse\PYZus{}loss} \PY{o}{+} \PY{n}{regularization\PYZus{}loss}
+\end{Verbatim}
+
+    \hypertarget{alternating-optimization}{%
+\subsection{Alternating optimization}\label{alternating-optimization}}
+
+In the first step, we will approach the problem via alternating
+optimization, as learned in the lecture. That is, during each iteration
+you first update \(Q\) while having \(P\) fixed and then vice versa.
+
+    \hypertarget{task-2-implement-a-function-that-initializes-the-latent-factors-q-and-p}{%
+\subsubsection{\texorpdfstring{Task 2: Implement a function that
+initializes the latent factors \(Q\) and
+\(P\)}{Task 2: Implement a function that initializes the latent factors Q and P}}\label{task-2-implement-a-function-that-initializes-the-latent-factors-q-and-p}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}12}]:} \PY{k}{def} \PY{n+nf}{initialize\PYZus{}Q\PYZus{}P}\PY{p}{(}\PY{n}{matrix}\PY{p}{,} \PY{n}{k}\PY{p}{,} \PY{n}{init}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{random}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}\PY{p}{:}
+             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}}
+         \PY{l+s+sd}{    Initialize the matrices Q and P for a latent factor model.}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    Parameters}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    matrix : sp.spmatrix, shape [N, D]}
+         \PY{l+s+sd}{             The matrix to be factorized.}
+         \PY{l+s+sd}{    k      : int}
+         \PY{l+s+sd}{             The number of latent dimensions.}
+         \PY{l+s+sd}{    init   : str in [\PYZsq{}svd\PYZsq{}, \PYZsq{}random\PYZsq{}], default: \PYZsq{}random\PYZsq{}}
+         \PY{l+s+sd}{             The initialization strategy. \PYZsq{}svd\PYZsq{} means that we use SVD to initialize P and Q, \PYZsq{}random\PYZsq{} means we initialize}
+         \PY{l+s+sd}{             the entries in P and Q randomly in the interval [0, 1).}
+         
+         \PY{l+s+sd}{    Returns}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    Q : np.array, shape [N, k]}
+         \PY{l+s+sd}{        The initialized matrix Q of a latent factor model.}
+         
+         \PY{l+s+sd}{    P : np.array, shape [k, D]}
+         \PY{l+s+sd}{        The initialized matrix P of a latent factor model.}
+         \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+             \PY{n}{np}\PY{o}{.}\PY{n}{random}\PY{o}{.}\PY{n}{seed}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{)}
+             \PY{k}{if} \PY{n}{init}\PY{o}{==}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{random}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:}
+                 \PY{n}{Q} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{random}\PY{o}{.}\PY{n}{random}\PY{p}{(}\PY{p}{(}\PY{n}{matrix}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{k}\PY{p}{)}\PY{p}{)}
+                 \PY{n}{P} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{random}\PY{o}{.}\PY{n}{random}\PY{p}{(}\PY{p}{(}\PY{n}{k}\PY{p}{,} \PY{n}{matrix}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{)}\PY{p}{)}
+             \PY{k}{else}\PY{p}{:}
+                 \PY{n}{Q}\PY{p}{,}\PY{n}{\PYZus{}}\PY{p}{,}\PY{n}{P} \PY{o}{=} \PY{n}{svds}\PY{p}{(}\PY{n}{matrix}\PY{p}{,} \PY{n}{full\PYZus{}matrices}\PY{o}{=}\PY{k+kc}{False}\PY{p}{)}
+                 
+             \PY{k}{assert} \PY{n}{Q}\PY{o}{.}\PY{n}{shape} \PY{o}{==} \PY{p}{(}\PY{n}{matrix}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{k}\PY{p}{)}
+             \PY{k}{assert} \PY{n}{P}\PY{o}{.}\PY{n}{shape} \PY{o}{==} \PY{p}{(}\PY{n}{k}\PY{p}{,} \PY{n}{matrix}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{)}
+             \PY{k}{return} \PY{n}{Q}\PY{p}{,} \PY{n}{P}
+\end{Verbatim}
+
+    \hypertarget{task-3-implement-the-alternating-optimization-approach}{%
+\subsubsection{Task 3: Implement the alternating optimization
+approach}\label{task-3-implement-the-alternating-optimization-approach}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}38}]:} \PY{k}{def} \PY{n+nf}{latent\PYZus{}factor\PYZus{}alternating\PYZus{}optimization}\PY{p}{(}\PY{n}{M}\PY{p}{,} \PY{n}{non\PYZus{}zero\PYZus{}idx}\PY{p}{,} \PY{n}{k}\PY{p}{,} \PY{n}{val\PYZus{}idx}\PY{p}{,} \PY{n}{val\PYZus{}values}\PY{p}{,}
+                                                    \PY{n}{reg\PYZus{}lambda}\PY{p}{,} \PY{n}{max\PYZus{}steps}\PY{o}{=}\PY{l+m+mi}{100}\PY{p}{,} \PY{n}{init}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{random}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}
+                                                    \PY{n}{log\PYZus{}every}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{,} \PY{n}{patience}\PY{o}{=}\PY{l+m+mi}{5}\PY{p}{,} \PY{n}{eval\PYZus{}every}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{)}\PY{p}{:}
+             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}}
+         \PY{l+s+sd}{    Perform matrix factorization using alternating optimization. Training is done via patience,}
+         \PY{l+s+sd}{    i.e. we stop training after we observe no improvement on the validation loss for a certain}
+         \PY{l+s+sd}{    amount of training steps. We then return the best values for Q and P oberved during training.}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    Parameters}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    M                 : sp.spmatrix, shape [N, D]}
+         \PY{l+s+sd}{                        The input matrix to be factorized.}
+         \PY{l+s+sd}{                      }
+         \PY{l+s+sd}{    non\PYZus{}zero\PYZus{}idx      : np.array, shape [nnz, 2]}
+         \PY{l+s+sd}{                        The indices of the non\PYZhy{}zero entries of the un\PYZhy{}shifted matrix to be factorized. }
+         \PY{l+s+sd}{                        nnz refers to the number of non\PYZhy{}zero entries. Note that this may be different}
+         \PY{l+s+sd}{                        from the number of non\PYZhy{}zero entries in the input matrix M, e.g. in the case}
+         \PY{l+s+sd}{                        that all ratings by a user have the same value.}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    k                 : int}
+         \PY{l+s+sd}{                        The latent factor dimension.}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    val\PYZus{}idx           : tuple, shape [2, n\PYZus{}validation]}
+         \PY{l+s+sd}{                        Tuple of the validation set indices.}
+         \PY{l+s+sd}{                        n\PYZus{}validation refers to the size of the validation set.}
+         \PY{l+s+sd}{                      }
+         \PY{l+s+sd}{    val\PYZus{}values        : np.array, shape [n\PYZus{}validation, ]}
+         \PY{l+s+sd}{                        The values in the validation set.}
+         \PY{l+s+sd}{                      }
+         \PY{l+s+sd}{    reg\PYZus{}lambda        : float}
+         \PY{l+s+sd}{                        The regularization strength.}
+         \PY{l+s+sd}{                      }
+         \PY{l+s+sd}{    max\PYZus{}steps         : int, optional, default: 100}
+         \PY{l+s+sd}{                        Maximum number of training steps. Note that we will stop early if we observe}
+         \PY{l+s+sd}{                        no improvement on the validation error for a specified number of steps}
+         \PY{l+s+sd}{                        (see \PYZdq{}patience\PYZdq{} for details).}
+         \PY{l+s+sd}{                      }
+         \PY{l+s+sd}{    init              : str in [\PYZsq{}random\PYZsq{}, \PYZsq{}svd\PYZsq{}], default \PYZsq{}random\PYZsq{}}
+         \PY{l+s+sd}{                        The initialization strategy for P and Q. See function initialize\PYZus{}Q\PYZus{}P for details.}
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    log\PYZus{}every         : int, optional, default: 1}
+         \PY{l+s+sd}{                        Log the training status every X iterations.}
+         \PY{l+s+sd}{                    }
+         \PY{l+s+sd}{    patience          : int, optional, default: 5}
+         \PY{l+s+sd}{                        Stop training after we observe no improvement of the validation loss for X evaluation}
+         \PY{l+s+sd}{                        iterations (see eval\PYZus{}every for details). After we stop training, we restore the best }
+         \PY{l+s+sd}{                        observed values for Q and P (based on the validation loss) and return them.}
+         \PY{l+s+sd}{                      }
+         \PY{l+s+sd}{    eval\PYZus{}every        : int, optional, default: 1}
+         \PY{l+s+sd}{                        Evaluate the training and validation loss every X steps. If we observe no improvement}
+         \PY{l+s+sd}{                        of the validation error, we decrease our patience by 1, else we reset it to *patience*.}
+         
+         \PY{l+s+sd}{    Returns}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    best\PYZus{}Q            : np.array, shape [N, k]}
+         \PY{l+s+sd}{                        Best value for Q (based on validation loss) observed during training}
+         \PY{l+s+sd}{                      }
+         \PY{l+s+sd}{    best\PYZus{}P            : np.array, shape [k, D]}
+         \PY{l+s+sd}{                        Best value for P (based on validation loss) observed during training}
+         \PY{l+s+sd}{                      }
+         \PY{l+s+sd}{    validation\PYZus{}losses : list of floats}
+         \PY{l+s+sd}{                        Validation loss for every evaluation iteration, can be used for plotting the validation}
+         \PY{l+s+sd}{                        loss over time.}
+         \PY{l+s+sd}{                        }
+         \PY{l+s+sd}{    train\PYZus{}losses      : list of floats}
+         \PY{l+s+sd}{                        Training loss for every evaluation iteration, can be used for plotting the training}
+         \PY{l+s+sd}{                        loss over time.                     }
+         \PY{l+s+sd}{    }
+         \PY{l+s+sd}{    converged\PYZus{}after   : int}
+         \PY{l+s+sd}{                        it \PYZhy{} patience*eval\PYZus{}every, where it is the iteration in which patience hits 0,}
+         \PY{l+s+sd}{                        or \PYZhy{}1 if we hit max\PYZus{}steps before converging. }
+         
+         \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+             \PY{n}{validation\PYZus{}losses} \PY{o}{=} \PY{p}{[}\PY{p}{]}
+             \PY{n}{train\PYZus{}losses} \PY{o}{=} \PY{p}{[}\PY{p}{]}
+             \PY{n}{reg} \PY{o}{=} \PY{n}{Ridge}\PY{p}{(}\PY{n}{alpha}\PY{o}{=}\PY{n}{reg\PYZus{}lambda}\PY{p}{,} \PY{n}{fit\PYZus{}intercept}\PY{o}{=}\PY{k+kc}{False}\PY{p}{)}
+             \PY{n}{Q}\PY{p}{,}\PY{n}{P} \PY{o}{=} \PY{n}{initialize\PYZus{}Q\PYZus{}P}\PY{p}{(}\PY{n}{M}\PY{p}{,} \PY{n}{k}\PY{p}{,} \PY{n}{init}\PY{p}{)}
+             \PY{n}{t} \PY{o}{=} \PY{l+m+mi}{0}
+             \PY{n}{current\PYZus{}p} \PY{o}{=} \PY{l+m+mi}{0}
+             \PY{n}{converged\PYZus{}after} \PY{o}{=} \PY{o}{\PYZhy{}}\PY{l+m+mi}{1}
+             \PY{n}{best\PYZus{}Q}\PY{p}{,} \PY{n}{best\PYZus{}P} \PY{o}{=} \PY{n}{Q}\PY{p}{,} \PY{n}{P}
+             \PY{n}{best\PYZus{}valid\PYZus{}lost} \PY{o}{=} \PY{n+nb}{float}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{inf}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+             \PY{n}{w\PYZus{}indexes} \PY{o}{=} \PY{p}{[}\PY{p}{]}
+             \PY{n}{h\PYZus{}indexes} \PY{o}{=} \PY{p}{[}\PY{p}{]}
+             \PY{k}{for} \PY{n}{el} \PY{o+ow}{in} \PY{n}{nonzero\PYZus{}indices}\PY{p}{:}
+                 \PY{n}{w\PYZus{}indexes}\PY{o}{.}\PY{n}{append}\PY{p}{(}\PY{n}{el}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{)}
+                 \PY{n}{h\PYZus{}indexes}\PY{o}{.}\PY{n}{append}\PY{p}{(}\PY{n}{el}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{)}
+             \PY{n}{m\PYZus{}idx} \PY{o}{=} \PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{n}{w\PYZus{}indexes}\PY{p}{)}\PY{p}{,} \PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{n}{h\PYZus{}indexes}\PY{p}{)}\PY{p}{)}
+             \PY{k}{for} \PY{n}{step} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{n}{max\PYZus{}steps}\PY{p}{)}\PY{p}{:}
+                 \PY{k}{if} \PY{n}{current\PYZus{}p} \PY{o}{==} \PY{n}{patience}\PY{p}{:}
+                     \PY{n}{converged\PYZus{}after} \PY{o}{=} \PY{n}{step} \PY{o}{\PYZhy{}} \PY{n}{patience}\PY{o}{*}\PY{n}{eval\PYZus{}every}
+                     \PY{k}{break}\PY{p}{;}
+                 \PY{n}{P} \PY{o}{=} \PY{n}{reg}\PY{o}{.}\PY{n}{fit}\PY{p}{(}\PY{n}{X}\PY{o}{=}\PY{n}{Q}\PY{p}{,} \PY{n}{y}\PY{o}{=}\PY{n}{M}\PY{p}{)}\PY{o}{.}\PY{n}{coef\PYZus{}}
+                 \PY{n}{Q} \PY{o}{=} \PY{n}{reg}\PY{o}{.}\PY{n}{fit}\PY{p}{(}\PY{n}{X}\PY{o}{=}\PY{n}{P}\PY{p}{,} \PY{n}{y}\PY{o}{=}\PY{n}{M}\PY{o}{.}\PY{n}{T}\PY{p}{)}\PY{o}{.}\PY{n}{coef\PYZus{}}
+                 \PY{k}{if} \PY{n}{step} \PY{o}{\PYZpc{}} \PY{n}{eval\PYZus{}every} \PY{o}{==} \PY{l+m+mi}{0}\PY{p}{:}
+                     \PY{n}{pred} \PY{o}{=} \PY{n}{Q}\PY{n+nd}{@P}\PY{o}{.}\PY{n}{T}
+                     \PY{n}{train\PYZus{}losses}\PY{o}{.}\PY{n}{append}\PY{p}{(}\PY{p}{(}\PY{p}{(}\PY{n}{M}\PY{p}{[}\PY{n}{m\PYZus{}idx}\PY{p}{]}\PY{o}{.}\PY{n}{T} \PY{o}{\PYZhy{}} \PY{n}{pred}\PY{p}{[}\PY{n}{m\PYZus{}idx}\PY{p}{]}\PY{p}{)}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{2}\PY{p}{)}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{p}{)}\PY{p}{)}
+                     \PY{n}{val\PYZus{}loss} \PY{o}{=} \PY{p}{(}\PY{p}{(}\PY{n}{val\PYZus{}values} \PY{o}{\PYZhy{}} \PY{n}{pred}\PY{p}{[}\PY{n}{val\PYZus{}idx}\PY{p}{]}\PY{p}{)}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{2}\PY{p}{)}\PY{o}{.}\PY{n}{mean}\PY{p}{(}\PY{p}{)}
+                     \PY{n}{validation\PYZus{}losses}\PY{o}{.}\PY{n}{append}\PY{p}{(}\PY{n}{val\PYZus{}loss}\PY{p}{)}
+                     \PY{k}{if} \PY{n}{val\PYZus{}loss} \PY{o}{\PYZlt{}} \PY{n}{best\PYZus{}valid\PYZus{}lost}\PY{p}{:}
+                         \PY{n}{best\PYZus{}valid\PYZus{}lost} \PY{o}{=} \PY{n}{val\PYZus{}loss}
+                         \PY{n}{best\PYZus{}P} \PY{o}{=} \PY{n}{P}
+                         \PY{n}{best\PYZus{}Q} \PY{o}{=} \PY{n}{Q}
+                     \PY{k}{if} \PY{n}{validation\PYZus{}losses}\PY{p}{[}\PY{n+nb}{len}\PY{p}{(}\PY{n}{validation\PYZus{}losses}\PY{p}{)} \PY{o}{\PYZhy{}} \PY{l+m+mi}{1}\PY{p}{]} \PY{o}{\PYZlt{}}\PY{o}{=} \PY{n}{val\PYZus{}loss}\PY{p}{:}
+                         \PY{n}{current\PYZus{}p} \PY{o}{=} \PY{n}{current\PYZus{}p} \PY{o}{+} \PY{l+m+mi}{1}
+                     \PY{k}{else}\PY{p}{:}
+                         \PY{n}{current\PYZus{}pent\PYZus{}p} \PY{o}{=} \PY{l+m+mi}{0}
+                 \PY{k}{if} \PY{n}{step} \PY{o}{\PYZpc{}} \PY{n}{log\PYZus{}every} \PY{o}{==} \PY{l+m+mi}{0}\PY{p}{:}
+                     \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Iteration }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{, training loss: }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{, validation loss: }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} 
+                           \PY{n}{step}\PY{p}{,} \PY{n}{train\PYZus{}losses}\PY{p}{[}\PY{n+nb}{len}\PY{p}{(}\PY{n}{train\PYZus{}losses}\PY{p}{)} \PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,}
+                           \PY{n}{validation\PYZus{}losses}\PY{p}{[}\PY{n+nb}{len}\PY{p}{(}\PY{n}{validation\PYZus{}losses}\PY{p}{)} \PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{]}\PY{p}{)}
+             \PY{k}{return} \PY{n}{best\PYZus{}Q}\PY{p}{,} \PY{n}{best\PYZus{}P}\PY{p}{,} \PY{n}{validation\PYZus{}losses}\PY{p}{,} \PY{n}{train\PYZus{}losses}\PY{p}{,} \PY{n}{converged\PYZus{}after}
+\end{Verbatim}
+
+    \hypertarget{train-the-latent-factor-nothing-to-do-here}{%
+\subsubsection{Train the latent factor (nothing to do
+here)}\label{train-the-latent-factor-nothing-to-do-here}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor} }]:} \PY{n}{Q}\PY{p}{,} \PY{n}{P}\PY{p}{,} \PY{n}{val\PYZus{}loss}\PY{p}{,} \PY{n}{train\PYZus{}loss}\PY{p}{,} \PY{n}{converged} \PY{o}{=} \PYZbs{}
+        \PY{n}{latent\PYZus{}factor\PYZus{}alternating\PYZus{}optimization}\PY{p}{(}\PY{n}{M\PYZus{}shifted}\PY{p}{,} \PY{n}{nonzero\PYZus{}indices}\PY{p}{,} 
+                                                \PY{n}{k}\PY{o}{=}\PY{l+m+mi}{100}\PY{p}{,} \PY{n}{val\PYZus{}idx}\PY{o}{=}\PY{n}{val\PYZus{}idx}\PY{p}{,}
+                                                \PY{n}{val\PYZus{}values}\PY{o}{=}\PY{n}{val\PYZus{}values\PYZus{}shifted}\PY{p}{,} 
+                                                \PY{n}{reg\PYZus{}lambda}\PY{o}{=}\PY{l+m+mf}{1e\PYZhy{}4}\PY{p}{,} \PY{n}{init}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{random}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}
+                                                \PY{n}{max\PYZus{}steps}\PY{o}{=}\PY{l+m+mi}{100}\PY{p}{,} \PY{n}{patience}\PY{o}{=}\PY{l+m+mi}{10}\PY{p}{)}
+\end{Verbatim}
+
+    \hypertarget{plot-the-validation-and-training-losses-over-for-each-iteration-nothing-to-do-here}{%
+\subsubsection{Plot the validation and training losses over for each
+iteration (nothing to do
+here)}\label{plot-the-validation-and-training-losses-over-for-each-iteration-nothing-to-do-here}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}15}]:} \PY{n}{fig}\PY{p}{,} \PY{n}{ax} \PY{o}{=} \PY{n}{plt}\PY{o}{.}\PY{n}{subplots}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{,} \PY{n}{figsize}\PY{o}{=}\PY{p}{[}\PY{l+m+mi}{10}\PY{p}{,} \PY{l+m+mi}{5}\PY{p}{]}\PY{p}{)}
+         \PY{n}{fig}\PY{o}{.}\PY{n}{suptitle}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Alternating optimization, k=100}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+         
+         \PY{n}{ax}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{train\PYZus{}loss}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{:}\PY{p}{:}\PY{p}{]}\PY{p}{)}
+         \PY{n}{ax}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{o}{.}\PY{n}{set\PYZus{}title}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Training loss}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+         \PY{n}{plt}\PY{o}{.}\PY{n}{xlabel}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Training iteration}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+         \PY{n}{plt}\PY{o}{.}\PY{n}{ylabel}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Loss}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+         
+         
+         \PY{n}{ax}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{val\PYZus{}loss}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{:}\PY{p}{:}\PY{p}{]}\PY{p}{)}
+         \PY{n}{ax}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}\PY{o}{.}\PY{n}{set\PYZus{}title}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Validation loss}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+         \PY{n}{plt}\PY{o}{.}\PY{n}{xlabel}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Training iteration}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+         \PY{n}{plt}\PY{o}{.}\PY{n}{ylabel}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Loss}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+         
+         \PY{n}{plt}\PY{o}{.}\PY{n}{show}\PY{p}{(}\PY{p}{)}
+\end{Verbatim}
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{output_28_0.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+
+    % Add a bibliography block to the postdoc
+    

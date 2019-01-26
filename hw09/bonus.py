@@ -87,7 +87,7 @@ class FeedForwardNet:
         b = self.bias_variable([shape[3]])
         return tf.nn.relu(self.conv1d(input, W) + b)
 
-    def build2(self, data_dim, num_classes, batch_norm):
+    def build(self, data_dim, num_classes, batch_norm):
         """ Construct the model.
 
         Parameters
@@ -125,7 +125,7 @@ class FeedForwardNet:
             self.biases.append(b)
 
             self.logits = tf.add(tf.matmul(hidden, w), b)
-            self.l2_norm = sum([tf.norm(weight) for weight in self.weights])
+            self.l2_norm = np.sum([tf.norm(weight) for weight in self.weights])
             self.cross_entropy_loss = tf.nn.softmax_cross_entropy_with_logits_v2(labels=self.Y, logits=self.logits)
             self.accuracy = tf.reduce_mean(
                 tf.cast(tf.equal(tf.argmax(self.Y, 1), tf.argmax(self.logits, 1)), tf.float32))
@@ -135,7 +135,7 @@ class FeedForwardNet:
             self.optimizer = tf.train.AdamOptimizer()
             self.opt_op = self.optimizer.minimize(self.loss, var_list=[*self.weights, *self.biases])
 
-    def build(self, data_dim, num_classes, batch_norm):
+    def build2(self, data_dim, num_classes, batch_norm):
         """ Construct the model.
 
         Parameters
